@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C9EA9E7B2DAEA6DE0044FDE0 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E7A2DAEA6DE0044FDE0 /* FirebaseAnalytics */; };
+		C9EA9E7D2DAEA6DE0044FDE0 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E7C2DAEA6DE0044FDE0 /* FirebaseAnalyticsOnDeviceConversion */; };
+		C9EA9E7F2DAEA6DE0044FDE0 /* FirebaseAnalyticsWithoutAdIdSupport in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E7E2DAEA6DE0044FDE0 /* FirebaseAnalyticsWithoutAdIdSupport */; };
+		C9EA9E812DAEA6DE0044FDE0 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E802DAEA6DE0044FDE0 /* FirebaseAppCheck */; };
+		C9EA9E832DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E822DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta */; };
+		C9EA9E862DAEA7040044FDE0 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E852DAEA7040044FDE0 /* FirebaseCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ingreedy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +32,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9EA9E812DAEA6DE0044FDE0 /* FirebaseAppCheck in Frameworks */,
+				C9EA9E7B2DAEA6DE0044FDE0 /* FirebaseAnalytics in Frameworks */,
+				C9EA9E832DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta in Frameworks */,
+				C9EA9E7F2DAEA6DE0044FDE0 /* FirebaseAnalyticsWithoutAdIdSupport in Frameworks */,
+				C9EA9E862DAEA7040044FDE0 /* FirebaseCore in Frameworks */,
+				C9EA9E7D2DAEA6DE0044FDE0 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				C9EA9E6D2DAEA6530044FDE0 /* Ingreedy */,
+				C9EA9E842DAEA7040044FDE0 /* Frameworks */,
 				C9EA9E6C2DAEA6530044FDE0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +59,13 @@
 				C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C9EA9E842DAEA7040044FDE0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +88,12 @@
 			);
 			name = Ingreedy;
 			packageProductDependencies = (
+				C9EA9E7A2DAEA6DE0044FDE0 /* FirebaseAnalytics */,
+				C9EA9E7C2DAEA6DE0044FDE0 /* FirebaseAnalyticsOnDeviceConversion */,
+				C9EA9E7E2DAEA6DE0044FDE0 /* FirebaseAnalyticsWithoutAdIdSupport */,
+				C9EA9E802DAEA6DE0044FDE0 /* FirebaseAppCheck */,
+				C9EA9E822DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta */,
+				C9EA9E852DAEA7040044FDE0 /* FirebaseCore */,
 			);
 			productName = Ingreedy;
 			productReference = C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */;
@@ -94,6 +123,9 @@
 			);
 			mainGroup = C9EA9E622DAEA6530044FDE0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C9EA9E6C2DAEA6530044FDE0 /* Products */;
 			projectDirPath = "";
@@ -320,6 +352,50 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C9EA9E7A2DAEA6DE0044FDE0 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		C9EA9E7C2DAEA6DE0044FDE0 /* FirebaseAnalyticsOnDeviceConversion */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsOnDeviceConversion;
+		};
+		C9EA9E7E2DAEA6DE0044FDE0 /* FirebaseAnalyticsWithoutAdIdSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsWithoutAdIdSupport;
+		};
+		C9EA9E802DAEA6DE0044FDE0 /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+		C9EA9E822DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseAppDistribution-Beta";
+		};
+		C9EA9E852DAEA7040044FDE0 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C9EA9E632DAEA6530044FDE0 /* Project object */;
 }
