@@ -1,10 +1,15 @@
 import SwiftUI
 
-protocol ViewProtocol: BaseView {
+protocol BaseView: View {
     associatedtype ViewModel
     
     var viewModel: ViewModel { get }
     
     func setupView() -> AnyView
-    func bindViewModel()
+}
+
+extension BaseView {
+    var body: some View {
+        setupView()
+    }
 } 
