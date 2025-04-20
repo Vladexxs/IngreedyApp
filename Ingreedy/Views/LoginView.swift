@@ -1,7 +1,12 @@
 import SwiftUI
 
 struct LoginView: View {
-    @StateObject private var viewModel = LoginViewModel()
+    @StateObject private var viewModel: LoginViewModel
+    @State private var showRegister = false
+    
+    init() {
+        _viewModel = StateObject(wrappedValue: LoginViewModel())
+    }
     
     var body: some View {
         ZStack {
@@ -28,7 +33,7 @@ struct LoginView: View {
                 LoginButton(action: viewModel.login)
                 
                 SignUpLink {
-                    // Sign up action will be added later
+                    showRegister = true
                 }
             }
             .padding(.horizontal, AppConstants.Spacing.extraLarge)
@@ -40,6 +45,9 @@ struct LoginView: View {
             if let error = viewModel.error {
                 ErrorView(error: error, retryAction: nil)
             }
+        }
+        .sheet(isPresented: $showRegister) {
+            RegisterView()
         }
     }
 }

@@ -22,9 +22,17 @@ enum AppConstants {
     
     enum ImageSize {
         static let logo: CGFloat = 120
+        static let errorIcon: CGFloat = 50
     }
     
     enum FontSize {
         static let title: CGFloat = 40
+        static let headline: CGFloat = 17
+        static let body: CGFloat = 15
+    }
+    
+    enum Opacity {
+        static let background: Double = 0.3
+        static let foreground: Double = 0.9
     }
 } 

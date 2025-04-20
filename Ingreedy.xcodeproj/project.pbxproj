@@ -13,10 +13,12 @@
 		C9EA9E812DAEA6DE0044FDE0 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E802DAEA6DE0044FDE0 /* FirebaseAppCheck */; };
 		C9EA9E832DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E822DAEA6DE0044FDE0 /* FirebaseAppDistribution-Beta */; };
 		C9EA9E862DAEA7040044FDE0 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = C9EA9E852DAEA7040044FDE0 /* FirebaseCore */; };
+		C9EA9EC12DB4F4590044FDE0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C9EA9EC02DB4F4590044FDE0 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ingreedy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9EA9EC02DB4F4590044FDE0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -50,6 +52,7 @@
 				C9EA9E6D2DAEA6530044FDE0 /* Ingreedy */,
 				C9EA9E842DAEA7040044FDE0 /* Frameworks */,
 				C9EA9E6C2DAEA6530044FDE0 /* Products */,
+				C9EA9EC02DB4F4590044FDE0 /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -141,6 +144,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9EA9EC12DB4F4590044FDE0 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
