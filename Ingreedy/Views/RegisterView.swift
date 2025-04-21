@@ -3,6 +3,7 @@ import SwiftUI
 struct RegisterView: View {
     @StateObject private var viewModel: RegisterViewModel
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var router: Router
     
     init() {
         _viewModel = StateObject(wrappedValue: RegisterViewModel())
@@ -23,6 +24,9 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.fullName,
                         isSecure: false
                     )
+                    .onChange(of: viewModel.registerModel.fullName) { _ in
+                        viewModel.clearError()
+                    }
                     
                     LoginTextField(
                         title: "Email",
@@ -30,6 +34,9 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.email,
                         isSecure: false
                     )
+                    .onChange(of: viewModel.registerModel.email) { _ in
+                        viewModel.clearError()
+                    }
                     
                     LoginTextField(
                         title: "Password",
@@ -37,6 +44,9 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.password,
                         isSecure: true
                     )
+                    .onChange(of: viewModel.registerModel.password) { _ in
+                        viewModel.clearError()
+                    }
                     
                     LoginTextField(
                         title: "Confirm Password",
@@ -44,8 +54,14 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.confirmPassword,
                         isSecure: true
                     )
+                    .onChange(of: viewModel.registerModel.confirmPassword) { _ in
+                        viewModel.clearError()
+                    }
                     
-                    RegisterButton(action: viewModel.register)
+                    RegisterButton(action: {
+                        viewModel.register()
+                        router.navigate(to: .home)
+                    })
                     
                     LoginLink {
                         dismiss()
@@ -59,7 +75,13 @@ struct RegisterView: View {
             }
             
             if let error = viewModel.error {
-                ErrorView(error: error, retryAction: nil)
+                ErrorView(
+                    error: error,
+                    retryAction: nil,
+                    dismissAction: {
+                        viewModel.clearError()
+                    }
+                )
             }
         }
     }
@@ -67,4 +89,5 @@ struct RegisterView: View {
 
 #Preview {
     RegisterView()
+        .environmentObject(Router())
 } 

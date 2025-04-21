@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class BaseViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: Error?

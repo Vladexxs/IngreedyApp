@@ -1,8 +1,10 @@
 import SwiftUI
 
+@MainActor
 struct LoginView: View {
     @StateObject private var viewModel: LoginViewModel
     @State private var showRegister = false
+    @EnvironmentObject private var router: Router
     
     init() {
         _viewModel = StateObject(wrappedValue: LoginViewModel())
@@ -22,6 +24,9 @@ struct LoginView: View {
                     text: $viewModel.loginModel.email,
                     isSecure: false
                 )
+                .onChange(of: viewModel.loginModel.email) { _ in
+                    viewModel.clearError()
+                }
                 
                 LoginTextField(
                     title: "Password",
@@ -29,8 +34,13 @@ struct LoginView: View {
                     text: $viewModel.loginModel.password,
                     isSecure: true
                 )
+                .onChange(of: viewModel.loginModel.password) { _ in
+                    viewModel.clearError()
+                }
                 
-                LoginButton(action: viewModel.login)
+                LoginButton(action: {
+                    viewModel.login()
+                })
                 
                 SignUpLink {
                     showRegister = true
@@ -43,15 +53,29 @@ struct LoginView: View {
             }
             
             if let error = viewModel.error {
-                ErrorView(error: error, retryAction: nil)
+                ErrorView(
+                    error: error,
+                    retryAction: nil,
+                    dismissAction: {
+                        viewModel.clearError()
+                    }
+                )
             }
         }
         .sheet(isPresented: $showRegister) {
             RegisterView()
+        }
+        .onChange(of: viewModel.isLoggedIn) { isLoggedIn in
+            if isLoggedIn {
+                router.navigate(to: .home)
+            }
         }
     }
 }
 
 #Preview {
     LoginView()
+        .environmentObject(Router())
 } 
+
+

@@ -3,38 +3,49 @@ import SwiftUI
 struct ErrorView: View {
     let error: Error
     let retryAction: (() -> Void)?
+    let dismissAction: () -> Void
+    private let id = UUID()
     
     var body: some View {
-        ZStack {
-            Color.black.opacity(AppConstants.Opacity.background)
-                .ignoresSafeArea()
+        VStack {
+            Spacer()
             
-            VStack(spacing: AppConstants.Spacing.medium) {
+            HStack(spacing: AppConstants.Spacing.small) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: AppConstants.ImageSize.errorIcon))
-                    .foregroundColor(AppColors.text)
+                    .font(.system(size: 20))
+                    .foregroundColor(.red)
                 
                 Text(error.localizedDescription)
-                    .foregroundColor(AppColors.text)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppConstants.Spacing.medium)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
                 
-                if let retryAction = retryAction {
-                    Button(action: retryAction) {
-                        Text("Retry")
-                            .font(.system(size: AppConstants.FontSize.headline))
-                            .foregroundColor(AppColors.buttonText)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(AppColors.buttonBackground)
-                            .cornerRadius(AppConstants.CornerRadius.medium)
-                    }
-                    .padding(.top, AppConstants.Spacing.small)
+                Spacer()
+                
+                Button(action: dismissAction) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white.opacity(0.8))
                 }
             }
-            .padding(AppConstants.Spacing.large)
-            .background(AppColors.primary.opacity(AppConstants.Opacity.foreground))
-            .cornerRadius(AppConstants.CornerRadius.medium)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.red.opacity(0.9))
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, 20)
         }
+        .transition(.move(edge: .bottom))
+        .animation(.spring(), value: id)
     }
+}
+
+#Preview {
+    ErrorView(
+        error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid email or password"]),
+        retryAction: nil,
+        dismissAction: {}
+    )
 } 
