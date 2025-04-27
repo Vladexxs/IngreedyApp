@@ -5,11 +5,12 @@
 //  Created by Mert Yılmazer on 15.04.2025.
 //
 
+
 import SwiftUI
 import FirebaseCore
 
 @main
-struct IngreedyApp: App {
+struct Ingreedy: App {
     @StateObject private var router = Router()
     
     init() {
