@@ -4,37 +4,38 @@ struct RecipeCard: View {
     let recipe: Recipe
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppConstants.Spacing.small) {
-            // Placeholder image
-            Rectangle()
-                .fill(AppColors.primary.opacity(0.2))
-                .frame(height: 150)
-                .overlay(
-                    Image(systemName: "photo")
-                        .font(.system(size: 50))
-                        .foregroundColor(AppColors.primary)
-                )
-                .cornerRadius(AppConstants.CornerRadius.medium)
-            
-            Text(recipe.title)
-                .font(.system(size: AppConstants.FontSize.headline))
-                .foregroundColor(AppColors.text)
-                .lineLimit(2)
-            
-            HStack {
-                Label(recipe.cookingTime, systemImage: "clock")
-                    .font(.system(size: AppConstants.FontSize.body))
-                    .foregroundColor(AppColors.text)
-                
-                Spacer()
-                
-                Label(recipe.difficulty, systemImage: "chart.bar.fill")
-                    .font(.system(size: AppConstants.FontSize.body))
-                    .foregroundColor(AppColors.text)
+        VStack(alignment: .leading, spacing: 8) {
+            AsyncImage(url: URL(string: recipe.image ?? "")) { image in
+                image.resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Color.gray
             }
+            .frame(height: 150)
+            .clipped()
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(recipe.name)
+                    .font(.headline)
+                    .lineLimit(2)
+                
+                Text(recipe.cuisine ?? "")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                
+                HStack {
+                    Label("\((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)) min", systemImage: "clock")
+                    Spacer()
+                    Label(recipe.difficulty ?? "", systemImage: "chart.bar")
+                }
+                .font(.caption)
+                .foregroundColor(.gray)
+            }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 8)
         }
-        .padding()
-        .background(AppColors.primary.opacity(0.1))
-        .cornerRadius(AppConstants.CornerRadius.medium)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 2)
     }
 } 

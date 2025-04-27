@@ -4,6 +4,7 @@ enum Route {
     case login
     case register
     case home
+    case recipes
 }
 
 class Router: ObservableObject {

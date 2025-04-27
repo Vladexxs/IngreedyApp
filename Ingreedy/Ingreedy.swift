@@ -30,6 +30,9 @@ struct Ingreedy: App {
             case .home:
                 HomeView()
                     .environmentObject(router)
+            case .recipes:
+                RecipeListView()
+                    .environmentObject(router)
             }
         }
     }
