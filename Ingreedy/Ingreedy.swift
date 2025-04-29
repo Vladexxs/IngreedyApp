@@ -33,6 +33,9 @@ struct Ingreedy: App {
             case .recipes:
                 RecipeListView()
                     .environmentObject(router)
+            case .ingredientSuggestion:
+                IngredientSuggestionView()
+                    .environmentObject(router)
             }
         }
     }

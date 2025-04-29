@@ -31,9 +31,11 @@
 		C9037CDB2DBED91700DD5B58 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDA2DBED91700DD5B58 /* FirebaseStorage */; };
 		C9037CDD2DBED91700DD5B58 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDC2DBED91700DD5B58 /* FirebaseStorageCombine-Community */; };
 		C9037CDF2DBED91700DD5B58 /* FirebaseVertexAI in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDE2DBED91700DD5B58 /* FirebaseVertexAI */; };
+		C942DEA72DC12C2F008E551C /* rules.md in Resources */ = {isa = PBXBuildFile; fileRef = C942DEA62DC12C2F008E551C /* rules.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C942DEA62DC12C2F008E551C /* rules.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = rules.md; sourceTree = "<group>"; };
 		C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ingreedy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -86,6 +88,7 @@
 				C9EA9E6D2DAEA6530044FDE0 /* Ingreedy */,
 				C9EA9E842DAEA7040044FDE0 /* Frameworks */,
 				C9EA9E6C2DAEA6530044FDE0 /* Products */,
+				C942DEA62DC12C2F008E551C /* rules.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -195,6 +198,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C942DEA72DC12C2F008E551C /* rules.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

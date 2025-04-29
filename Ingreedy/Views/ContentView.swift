@@ -15,6 +15,8 @@ struct ContentView: View {
                 HomeView()
             case .recipes:
                 RecipeListView()
+            case .ingredientSuggestion:
+                IngredientSuggestionView()
             }
         }
     }
