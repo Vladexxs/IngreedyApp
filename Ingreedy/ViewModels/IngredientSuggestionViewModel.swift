@@ -3,7 +3,7 @@ import Foundation
 class IngredientSuggestionViewModel: ObservableObject {
     @Published var userIngredients: [String] = []
     @Published var suggestedRecipes: [Recipe] = []
-    @Published var partialMatchRecipes: [(recipe: Recipe, missingIngredients: [String])] = []
+    @Published var partialMatchRecipes: [(recipe: Recipe, matchingIngredients: [String], missingIngredients: [String])] = []
     @Published var isLoading = false
     @Published var error: Error?
     @Published var searchText: String = "" {
@@ -81,7 +81,7 @@ class IngredientSuggestionViewModel: ObservableObject {
 
     private func processRecipes(_ recipes: [Recipe]) {
         let userSet = Set(userIngredients.map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) })
-        var matches: [(recipe: Recipe, matchRatio: Double, missingIngredients: [String])] = []
+        var matches: [(recipe: Recipe, matchRatio: Double, matchingIngredients: [String], missingIngredients: [String])] = []
 
         guard !userSet.isEmpty else { return }
 
@@ -89,7 +89,7 @@ class IngredientSuggestionViewModel: ObservableObject {
             let recipeIngredients = Set((recipe.ingredients ?? []).map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) })
             guard !recipeIngredients.isEmpty else { continue }
 
-            let matchingIngredients = userSet.intersection(recipeIngredients)
+            let matchingIngredients = Array(userSet.intersection(recipeIngredients))
             let missingIngredients = Array(recipeIngredients.subtracting(userSet))
             
             // Calculate match ratio
@@ -97,7 +97,7 @@ class IngredientSuggestionViewModel: ObservableObject {
             
             // Only include recipes where at least one ingredient matches
             if matchingIngredients.count > 0 {
-                matches.append((recipe: recipe, matchRatio: matchRatio, missingIngredients: missingIngredients))
+                matches.append((recipe: recipe, matchRatio: matchRatio, matchingIngredients: matchingIngredients, missingIngredients: missingIngredients))
             }
         }
 
@@ -106,7 +106,9 @@ class IngredientSuggestionViewModel: ObservableObject {
 
         // Separate exact matches and partial matches
         let exactMatches = matches.filter { $0.matchRatio == 1.0 }.map { $0.recipe }
-        let partial = matches.filter { $0.matchRatio < 1.0 }.map { (recipe: $0.recipe, missingIngredients: $0.missingIngredients) }
+        let partial = matches.filter { $0.matchRatio < 1.0 }.map { 
+            (recipe: $0.recipe, matchingIngredients: $0.matchingIngredients, missingIngredients: $0.missingIngredients) 
+        }
 
         self.suggestedRecipes = exactMatches
         self.partialMatchRecipes = partial
