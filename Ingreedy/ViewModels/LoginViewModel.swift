@@ -12,7 +12,7 @@ class LoginViewModel: BaseViewModel {
     }
     
     func login() {
-        Task {
+        /* Task {
             do {
                 await MainActor.run {
                     isLoading = true
@@ -35,7 +35,11 @@ class LoginViewModel: BaseViewModel {
                     handleError(error)
                 }
             }
-        }
+        } */
+        
+        // Doğrudan Home ekranına yönlendir
+        isLoading = false
+        isLoggedIn = true
     }
     
     func clearError() {

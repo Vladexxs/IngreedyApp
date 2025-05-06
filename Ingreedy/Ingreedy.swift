@@ -15,28 +15,14 @@ struct Ingreedy: App {
     
     init() {
         FirebaseApp.configure()
-        router.checkAuthAndNavigate()
+        // Doğrudan home ekranına yönlendir, giriş kontrolü yapma
+        router.navigate(to: .home)
     }
     
     var body: some Scene {
         WindowGroup {
-            switch router.currentRoute {
-            case .login:
-                LoginView()
-                    .environmentObject(router)
-            case .register:
-                RegisterView()
-                    .environmentObject(router)
-            case .home:
-                HomeView()
-                    .environmentObject(router)
-            case .recipes:
-                RecipeListView()
-                    .environmentObject(router)
-            case .ingredientSuggestion:
-                IngredientSuggestionView()
-                    .environmentObject(router)
-            }
+            ContentView()
+                .environmentObject(router)
         }
     }
 }

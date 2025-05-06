@@ -157,6 +157,7 @@ struct IngredientSuggestionView: View {
                     Spacer()
                 }
                 .padding()
+                .padding(.bottom, 80)
             }
             .navigationBarTitleDisplayMode(.inline)
         }

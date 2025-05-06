@@ -7,21 +7,29 @@ struct RecipeListView: View {
     
     var body: some View {
         NavigationView {
-            VStack {
-                SearchBar(text: $searchText, onSearch: {
-                    viewModel.searchRecipes(query: searchText)
-                })
+            ZStack {
+                AppColors.background.edgesIgnoringSafeArea(.all)
                 
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let error = viewModel.error {
-                    Text("Error: \(error.localizedDescription)")
-                        .foregroundColor(.red)
-                } else {
-                    List(viewModel.recipes) { recipe in
-                        NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
-                            RecipeRow(recipe: recipe)
+                VStack {
+                    SearchBar(text: $searchText, onSearch: {
+                        viewModel.searchRecipes(query: searchText)
+                    })
+                    
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .frame(maxHeight: .infinity)
+                    } else if let error = viewModel.error {
+                        Text("Error: \(error.localizedDescription)")
+                            .foregroundColor(.red)
+                            .frame(maxHeight: .infinity)
+                    } else {
+                        List(viewModel.recipes) { recipe in
+                            NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                                RecipeRow(recipe: recipe)
+                            }
                         }
+                        .listStyle(PlainListStyle())
+                        .padding(.bottom, 120) // Extra padding for tab bar
                     }
                 }
             }
