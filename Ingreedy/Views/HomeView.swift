@@ -2,14 +2,9 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var router: Router
-    
-    // Example data
     @State private var selectedCategory = "Breakfast"
+    @StateObject private var viewModel = HomeViewModel()
     let userName = "Alena Sabyan"
-    let featuredRecipes = [
-        (title: "Asian white noodle with extra seafood", author: "James Spader", time: "20 Min", image: "featured1"),
-        (title: "Healthy noodle with fresh veggie", author: "Olivia Wilde", time: "15 Min", image: "featured2")
-    ]
     let categories = ["Breakfast", "Lunch", "Dinner"]
     let popularRecipes = [
         (title: "Healthy Taco Salad with fresh vegetable", kcal: 120, image: "popular1"),
@@ -47,7 +42,7 @@ struct HomeView: View {
                         .padding(.horizontal, 24)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 20) {
-                            ForEach(featuredRecipes, id: \ .title) { recipe in
+                            ForEach(viewModel.featuredRecipes, id: \ .id) { recipe in
                                 FeaturedRecipeCard(recipe: recipe)
                             }
                         }
@@ -132,13 +127,33 @@ struct HomeView: View {
 }
 
 struct FeaturedRecipeCard: View {
-    let recipe: (title: String, author: String, time: String, image: String)
+    let recipe: Recipe
     var body: some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 22)
-                .fill(AppColors.primary.opacity(0.15))
-                .frame(width: 230, height: 130)
+            if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 230, height: 130)
+                        .clipped()
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(AppColors.primary.opacity(0.15))
+                        .frame(width: 230, height: 130)
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(Color.black.opacity(0.28))
+                )
+                .cornerRadius(22)
                 .shadow(color: AppColors.primary.opacity(0.10), radius: 8, y: 4)
+            } else {
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(AppColors.primary.opacity(0.15))
+                    .frame(width: 230, height: 130)
+                    .shadow(color: AppColors.primary.opacity(0.10), radius: 8, y: 4)
+            }
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("Featured")
@@ -150,25 +165,25 @@ struct FeaturedRecipeCard: View {
                         .cornerRadius(8)
                     Spacer()
                 }
-                Text(recipe.title)
+                Text(recipe.name)
                     .font(.subheadline.bold())
-                    .foregroundColor(AppColors.text)
+                    .foregroundColor(.white)
                     .lineLimit(2)
                 Spacer()
                 HStack {
                     Image(systemName: "person.crop.circle")
                         .font(.caption)
-                        .foregroundColor(AppColors.primary)
-                    Text(recipe.author)
+                        .foregroundColor(.white)
+                    Text(recipe.cuisine ?? "")
                         .font(.caption)
-                        .foregroundColor(AppColors.text)
+                        .foregroundColor(.white)
                     Spacer()
                     Image(systemName: "clock")
                         .font(.caption)
-                        .foregroundColor(AppColors.primary)
-                    Text(recipe.time)
+                        .foregroundColor(.white)
+                    Text("\((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)) Min")
                         .font(.caption)
-                        .foregroundColor(AppColors.text)
+                        .foregroundColor(.white)
                 }
             }
             .padding(16)
