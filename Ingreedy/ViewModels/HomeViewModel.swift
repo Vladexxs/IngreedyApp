@@ -4,6 +4,13 @@ import Combine
 class HomeViewModel: BaseViewModel {
     @Published var homeModel: HomeModel?
     @Published var featuredRecipes: [Recipe] = [] // Featured tarifler için
+    @Published var popularRecipes: [Recipe] = [] // Popüler tarifler için
+    @Published var selectedMealType: String = "Breakfast" {
+        didSet {
+            fetchFeaturedRecipesByMealType()
+            fetchPopularRecipesByMealType()
+        }
+    }
     private let authService: AuthenticationServiceProtocol
     private let recipeService = RecipeService()
     
@@ -11,7 +18,8 @@ class HomeViewModel: BaseViewModel {
         self.authService = authService
         super.init()
         setupUser()
-        fetchFeaturedRecipes()
+        fetchFeaturedRecipesByMealType()
+        fetchPopularRecipesByMealType()
     }
     
     private func setupUser() {
@@ -31,6 +39,52 @@ class HomeViewModel: BaseViewModel {
                 case .failure(let error):
                     print("Featured tarifler alınamadı: \(error.localizedDescription)")
                     self?.featuredRecipes = []
+                }
+            }
+        }
+    }
+    
+    func fetchPopularRecipes() {
+        recipeService.fetchPopularRecipes(limit: 10) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let recipes):
+                    self?.popularRecipes = recipes
+                case .failure(let error):
+                    print("Popüler tarifler alınamadı: \(error.localizedDescription)")
+                    self?.popularRecipes = []
+                }
+            }
+        }
+    }
+    
+    func fetchFeaturedRecipesByMealType() {
+        recipeService.fetchRecipesByMealType(selectedMealType) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let recipes):
+                    self?.featuredRecipes = Array(recipes.shuffled().prefix(2))
+                case .failure(let error):
+                    print("Featured tarifler alınamadı: \(error.localizedDescription)")
+                    self?.featuredRecipes = []
+                }
+            }
+        }
+    }
+    
+    func fetchPopularRecipesByMealType() {
+        recipeService.fetchRecipesByMealType(selectedMealType) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let recipes):
+                    // rating'e göre sırala, ilk 10'u al
+                    let sorted = recipes.sorted { (a: Recipe, b: Recipe) in
+                        (a.rating ?? 0) > (b.rating ?? 0)
+                    }
+                    self?.popularRecipes = Array(sorted.prefix(10))
+                case .failure(let error):
+                    print("Popüler tarifler alınamadı: \(error.localizedDescription)")
+                    self?.popularRecipes = []
                 }
             }
         }

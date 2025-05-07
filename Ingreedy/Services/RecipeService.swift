@@ -13,6 +13,7 @@ struct Recipe: Codable, Identifiable {
     let caloriesPerServing: Int?
     let tags: [String]?
     let image: String?
+    let rating: Double?
 }
 
 class RecipeService {
@@ -78,6 +79,64 @@ class RecipeService {
             }
         }
         
+        task.resume()
+    }
+    
+    func fetchPopularRecipes(limit: Int = 10, completion: @escaping (Result<[Recipe], Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)?sortBy=rating&order=desc&limit=\(limit)") else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            print(String(data: data, encoding: .utf8) ?? "No data")
+            
+            do {
+                let decoder = JSONDecoder()
+                let response = try decoder.decode(RecipeResponse.self, from: data)
+                completion(.success(response.recipes))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+        
+        task.resume()
+    }
+    
+    func fetchRecipesByMealType(_ mealType: String, completion: @escaping (Result<[Recipe], Error>) -> Void) {
+        let lowercasedType = mealType.lowercased()
+        guard let url = URL(string: "\(baseURL)/meal-type/\(lowercasedType)") else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            print(String(data: data, encoding: .utf8) ?? "No data")
+            do {
+                let decoder = JSONDecoder()
+                let response = try decoder.decode(RecipeResponse.self, from: data)
+                completion(.success(response.recipes))
+            } catch {
+                completion(.failure(error))
+            }
+        }
         task.resume()
     }
 }

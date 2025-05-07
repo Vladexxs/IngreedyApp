@@ -5,11 +5,7 @@ struct HomeView: View {
     @State private var selectedCategory = "Breakfast"
     @StateObject private var viewModel = HomeViewModel()
     let userName = "Alena Sabyan"
-    let categories = ["Breakfast", "Lunch", "Dinner"]
-    let popularRecipes = [
-        (title: "Healthy Taco Salad with fresh vegetable", kcal: 120, image: "popular1"),
-        (title: "Japanese-style Pancakes Recipe", kcal: 64, image: "popular2")
-    ]
+    let categories = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"]
     
     var body: some View {
         ZStack {
@@ -63,22 +59,24 @@ struct HomeView: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 10)
-                    HStack(spacing: 18) {
-                        ForEach(categories, id: \.self) { cat in
-                            Button(action: { selectedCategory = cat }) {
-                                Text(cat)
-                                    .font(.subheadline.bold())
-                                    .foregroundColor(selectedCategory == cat ? .white : AppColors.text)
-                                    .padding(.horizontal, 26)
-                                    .padding(.vertical, 12)
-                                    .background(selectedCategory == cat ? AppColors.accent : AppColors.card)
-                                    .cornerRadius(22)
-                                    .shadow(color: selectedCategory == cat ? AppColors.accent.opacity(0.25) : .clear, radius: 6, y: 2)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 18) {
+                            ForEach(categories, id: \.self) { cat in
+                                Button(action: { viewModel.selectedMealType = cat }) {
+                                    Text(cat)
+                                        .font(.subheadline.bold())
+                                        .foregroundColor(viewModel.selectedMealType == cat ? .white : AppColors.text)
+                                        .padding(.horizontal, 26)
+                                        .padding(.vertical, 12)
+                                        .background(viewModel.selectedMealType == cat ? AppColors.accent : AppColors.card)
+                                        .cornerRadius(22)
+                                        .shadow(color: viewModel.selectedMealType == cat ? AppColors.accent.opacity(0.25) : .clear, radius: 6, y: 2)
+                                }
+                                .animation(.easeInOut(duration: 0.18), value: viewModel.selectedMealType)
                             }
-                            .animation(.easeInOut(duration: 0.18), value: selectedCategory)
                         }
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.horizontal, 20)
                     .padding(.bottom, 32)
                     
                     // Popular Recipes
@@ -95,7 +93,7 @@ struct HomeView: View {
                     .padding(.bottom, 10)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 20) {
-                            ForEach(popularRecipes, id: \ .title) { recipe in
+                            ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
                                 PopularRecipeCard(recipe: recipe)
                             }
                         }
@@ -194,21 +192,29 @@ struct FeaturedRecipeCard: View {
 
 struct PopularRecipeCard: View {
     @State private var isFavorite = false
-    let recipe: (title: String, kcal: Int, image: String)
+    let recipe: Recipe
     var body: some View {
         ZStack(alignment: .topTrailing) {
             VStack(alignment: .leading, spacing: 12) {
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(AppColors.card)
-                    .frame(width: 160, height: 120)
-                    .overlay(
-                        Image(systemName: "photo")
+                if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
+                    AsyncImage(url: url) { image in
+                        image
                             .resizable()
-                            .scaledToFit()
-                            .frame(width: 70, height: 70)
-                            .opacity(0.3)
-                    )
-                Text(recipe.title)
+                            .scaledToFill()
+                            .frame(width: 170, height: 120)
+                            .clipped()
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(AppColors.card)
+                            .frame(width: 170, height: 120)
+                    }
+                    .cornerRadius(18)
+                } else {
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(AppColors.card)
+                        .frame(width: 170, height: 120)
+                }
+                Text(recipe.name)
                     .font(.subheadline.bold())
                     .foregroundColor(AppColors.text)
                     .lineLimit(2)
@@ -217,17 +223,17 @@ struct PopularRecipeCard: View {
                     Image(systemName: "flame")
                         .font(.caption)
                         .foregroundColor(AppColors.accent)
-                    Text("\(recipe.kcal) Kcal")
+                    Text("\(recipe.caloriesPerServing ?? 0) Kcal")
                         .font(.caption)
                         .foregroundColor(AppColors.text)
                 }
-                Spacer(minLength: 4) // Alt boşluk ekle
+                Spacer(minLength: 4)
             }
-            .frame(width: 170, height: 200) // Kartı biraz daha yüksek ve geniş yap
-            .padding(.vertical, 8) // Üst-alt padding
+            .frame(width: 170, height: 200)
+            .padding(.vertical, 8)
             .padding(.horizontal, 4)
             .background(AppColors.card)
-            .cornerRadius(22) // Daha belirgin köşe
+            .cornerRadius(22)
             .shadow(color: AppColors.primary.opacity(0.10), radius: 6, y: 3)
             Button(action: { isFavorite.toggle() }) {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
