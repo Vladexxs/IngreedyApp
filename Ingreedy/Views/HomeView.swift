@@ -106,7 +106,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    .padding(.bottom, 80) // Daha fazla boşluk ekleyerek butonla çakışmasını önle
+                    .padding(.bottom, 24) // Daha fazla boşluk azaltıldı
                     
                     // Show More Button
                     HStack {
@@ -122,7 +122,7 @@ struct HomeView: View {
                         }
                         Spacer()
                     }
-                    .padding(.bottom, 120) // Extra padding for tab bar
+                    .padding(.bottom, 40) // Extra padding for tab bar azaltıldı
                     .background(Color.clear) // Butonun arkasını şeffaf yap
                 }
             }
@@ -197,7 +197,7 @@ struct PopularRecipeCard: View {
                     .font(.subheadline.bold())
                     .foregroundColor(AppColors.text)
                     .lineLimit(2)
-                    .frame(width: 160, alignment: .leading) // Sabit genişlik ekle
+                    .frame(width: 160, alignment: .leading)
                 HStack(spacing: 8) {
                     Image(systemName: "flame")
                         .font(.caption)
@@ -206,12 +206,14 @@ struct PopularRecipeCard: View {
                         .font(.caption)
                         .foregroundColor(AppColors.text)
                 }
+                Spacer(minLength: 4) // Alt boşluk ekle
             }
-            .frame(width: 160)
-            .padding(12)
+            .frame(width: 170, height: 200) // Kartı biraz daha yüksek ve geniş yap
+            .padding(.vertical, 8) // Üst-alt padding
+            .padding(.horizontal, 4)
             .background(AppColors.card)
-            .cornerRadius(18)
-            .shadow(radius: 3, y: 2)
+            .cornerRadius(22) // Daha belirgin köşe
+            .shadow(color: AppColors.primary.opacity(0.10), radius: 6, y: 3)
             Button(action: { isFavorite.toggle() }) {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .foregroundColor(isFavorite ? .red : AppColors.primary)
