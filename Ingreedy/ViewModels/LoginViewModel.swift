@@ -1,5 +1,8 @@
 import Foundation
 import Combine
+import GoogleSignIn
+import FirebaseAuth
+import FirebaseCore
 
 @MainActor
 class LoginViewModel: BaseViewModel {
@@ -12,7 +15,7 @@ class LoginViewModel: BaseViewModel {
     }
     
     func login() {
-        /* Task {
+        Task {
             do {
                 await MainActor.run {
                     isLoading = true
@@ -35,14 +38,31 @@ class LoginViewModel: BaseViewModel {
                     handleError(error)
                 }
             }
-        } */
-        
-        // Doğrudan Home ekranına yönlendir
-        isLoading = false
-        isLoggedIn = true
+        }
     }
     
     func clearError() {
         error = nil
+    }
+    
+    func signInWithGoogle(presentingViewController: UIViewController) async {
+        do {
+            let userAuthentication = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
+            guard let idToken = userAuthentication.user.idToken?.tokenString else {
+                handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Google ID Token alınamadı."]))
+                return
+            }
+            let accessToken = userAuthentication.user.accessToken.tokenString
+            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
+            isLoading = true
+            error = nil
+            _ = try await Auth.auth().signIn(with: credential)
+            isLoading = false
+            isLoggedIn = true
+        } catch {
+            isLoading = false
+            isLoggedIn = false
+            handleError(error)
+        }
     }
 } 

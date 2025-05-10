@@ -42,6 +42,18 @@ struct LoginView: View {
                     viewModel.login()
                 })
                 
+                // Google ile Giriş Yap butonu
+                GoogleSignInButton {
+                    if let rootVC = UIApplication.shared.connectedScenes
+                        .compactMap({ $0 as? UIWindowScene })
+                        .flatMap({ $0.windows })
+                        .first(where: { $0.isKeyWindow })?.rootViewController {
+                        Task {
+                            await viewModel.signInWithGoogle(presentingViewController: rootVC)
+                        }
+                    }
+                }
+                
                 SignUpLink {
                     showRegister = true
                 }
@@ -76,6 +88,36 @@ struct LoginView: View {
 #Preview {
     LoginView()
         .environmentObject(Router())
+}
+
+struct ViewControllerResolver: UIViewControllerRepresentable {
+    var onResolve: (UIViewController) -> Void
+    func makeUIViewController(context: Context) -> UIViewController {
+        let viewController = UIViewController()
+        DispatchQueue.main.async {
+            onResolve(viewController)
+        }
+        return viewController
+    }
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+// GoogleSignInButton SwiftUI için basit bir buton
+struct GoogleSignInButton: View {
+    var action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: "globe")
+                Text("Google ile Giriş Yap")
+            }
+            .foregroundColor(.white)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color.red)
+            .cornerRadius(8)
+        }
+    }
 } 
 
 
