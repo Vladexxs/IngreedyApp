@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var router: Router
-    @State private var selectedCategory = "Breakfast"
     @StateObject private var viewModel = HomeViewModel()
     let userName = "Alena Sabyan"
     let categories = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"]
@@ -10,116 +9,94 @@ struct HomeView: View {
     var body: some View {
         ZStack {
             AppColors.background.edgesIgnoringSafeArea(.all)
-            
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Extra space at top to respect safe area and status bar
-                    Color.clear.frame(height: 60)
-                    
                     // Header
                     HStack(alignment: .center) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Good Morning 👋")
-                                .font(.system(size: 20, weight: .medium))
+                        Image(systemName: "sun.max.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(AppColors.primary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(viewModel.greetingText)")
+                                .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(AppColors.primary)
                             Text(userName)
-                                .font(.system(size: 32, weight: .bold))
+                                .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(AppColors.text)
                         }
                         Spacer()
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
-                    
+                    .padding(.top, 32)
+                    .padding(.bottom, 18)
                     // Featured
                     Text("Featured")
-                        .font(.headline)
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundColor(AppColors.text)
                         .padding(.horizontal, 24)
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 20) {
+                        HStack(spacing: 16) {
                             ForEach(viewModel.featuredRecipes, id: \ .id) { recipe in
                                 FeaturedRecipeCard(recipe: recipe)
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.top, 10)
-                    .padding(.bottom, 28)
-                    
+                    .padding(.top, 8)
+                    .padding(.bottom, 32)
                     // Category
                     HStack {
                         Text("Category")
-                            .font(.headline)
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(AppColors.text)
                         Spacer()
                         Button("See All") {}
-                            .font(.subheadline)
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(AppColors.accent)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 8)
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 18) {
+                        HStack(spacing: 14) {
                             ForEach(categories, id: \.self) { cat in
                                 Button(action: { viewModel.selectedMealType = cat }) {
                                     Text(cat)
-                                        .font(.subheadline.bold())
+                                        .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(viewModel.selectedMealType == cat ? .white : AppColors.text)
-                                        .padding(.horizontal, 26)
-                                        .padding(.vertical, 12)
+                                        .padding(.horizontal, 22)
+                                        .padding(.vertical, 10)
                                         .background(viewModel.selectedMealType == cat ? AppColors.accent : AppColors.card)
-                                        .cornerRadius(22)
-                                        .shadow(color: viewModel.selectedMealType == cat ? AppColors.accent.opacity(0.25) : .clear, radius: 6, y: 2)
+                                        .cornerRadius(18)
+                                        .shadow(color: viewModel.selectedMealType == cat ? AppColors.accent.opacity(0.18) : .clear, radius: 4, y: 1)
                                 }
                                 .animation(.easeInOut(duration: 0.18), value: viewModel.selectedMealType)
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 16)
                     }
                     .padding(.bottom, 32)
-                    
                     // Popular Recipes
                     HStack {
                         Text("Popular Recipes")
-                            .font(.headline)
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(AppColors.text)
                         Spacer()
                         Button("See All") {}
-                            .font(.subheadline)
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(AppColors.accent)
                     }
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 10)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 20) {
-                            ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
-                                PopularRecipeCard(recipe: recipe)
-                            }
+                    .padding(.bottom, 8)
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
+                        ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
+                            PopularRecipeCard(recipe: recipe)
                         }
-                        .padding(.horizontal, 20)
                     }
-                    .padding(.bottom, 24) // Daha fazla boşluk azaltıldı
-                    
-                    // Show More Button
-                    HStack {
-                        Spacer()
-                        Button(action: {}) {
-                            Text("Show More Recipes")
-                                .font(.subheadline.bold())
-                                .foregroundColor(AppColors.buttonText)
-                                .padding(.horizontal, 32)
-                                .padding(.vertical, 12)
-                                .background(AppColors.accent)
-                                .cornerRadius(22)
-                        }
-                        Spacer()
-                    }
-                    .padding(.bottom, 40) // Extra padding for tab bar azaltıldı
-                    .background(Color.clear) // Butonun arkasını şeffaf yap
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 32)
                 }
+                .padding(.bottom, 8)
             }
-            .edgesIgnoringSafeArea(.all)
         }
     }
 }

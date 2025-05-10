@@ -97,4 +97,18 @@ class HomeViewModel: BaseViewModel {
             handleError(error)
         }
     }
+    
+    var greetingText: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return "Good Morning"
+        case 12..<18:
+            return "Good Afternoon"
+        case 18..<23:
+            return "Good Evening"
+        default:
+            return "Good Night"
+        }
+    }
 } 
