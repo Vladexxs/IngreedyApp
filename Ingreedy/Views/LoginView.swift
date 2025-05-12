@@ -5,6 +5,10 @@ struct LoginView: View {
     @StateObject private var viewModel: LoginViewModel
     @State private var showRegister = false
     @EnvironmentObject private var router: Router
+    @State private var showResetPasswordAlert = false
+    @State private var resetEmail = ""
+    @State private var showResetPasswordSuccess = false
+    @State private var showForgotPassword = false
     
     init() {
         _viewModel = StateObject(wrappedValue: LoginViewModel())
@@ -24,7 +28,7 @@ struct LoginView: View {
                     text: $viewModel.loginModel.email,
                     isSecure: false
                 )
-                .onChange(of: viewModel.loginModel.email) { _ in
+                .onChange(of: viewModel.loginModel.email) {
                     viewModel.clearError()
                 }
                 
@@ -34,7 +38,7 @@ struct LoginView: View {
                     text: $viewModel.loginModel.password,
                     isSecure: true
                 )
-                .onChange(of: viewModel.loginModel.password) { _ in
+                .onChange(of: viewModel.loginModel.password) {
                     viewModel.clearError()
                 }
                 
@@ -42,7 +46,7 @@ struct LoginView: View {
                     viewModel.login()
                 })
                 
-                // Google ile Giriş Yap butonu
+                // Google Sign In button
                 GoogleSignInButton {
                     if let rootVC = UIApplication.shared.connectedScenes
                         .compactMap({ $0 as? UIWindowScene })
@@ -52,6 +56,16 @@ struct LoginView: View {
                             await viewModel.signInWithGoogle(presentingViewController: rootVC)
                         }
                     }
+                }
+                
+                // Forgot Password? link
+                Button(action: {
+                    showForgotPassword = true
+                }) {
+                    Text("Forgot Password?")
+                        .font(.footnote)
+                        .foregroundColor(.blue)
+                        .padding(.top, 4)
                 }
                 
                 SignUpLink {
@@ -77,8 +91,11 @@ struct LoginView: View {
         .sheet(isPresented: $showRegister) {
             RegisterView()
         }
-        .onChange(of: viewModel.isLoggedIn) { isLoggedIn in
-            if isLoggedIn {
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
+        .onChange(of: viewModel.isLoggedIn) {
+            if viewModel.isLoggedIn {
                 router.navigate(to: .home)
             }
         }
@@ -102,14 +119,14 @@ struct ViewControllerResolver: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
-// GoogleSignInButton SwiftUI için basit bir buton
+// Simple button for Google Sign In with SwiftUI
 struct GoogleSignInButton: View {
     var action: () -> Void
     var body: some View {
         Button(action: action) {
             HStack {
                 Image(systemName: "globe")
-                Text("Google ile Giriş Yap")
+                Text("Sign in with Google")
             }
             .foregroundColor(.white)
             .padding()
@@ -118,6 +135,6 @@ struct GoogleSignInButton: View {
             .cornerRadius(8)
         }
     }
-} 
+}
 
 

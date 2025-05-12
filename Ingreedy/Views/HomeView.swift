@@ -3,7 +3,6 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var router: Router
     @StateObject private var viewModel = HomeViewModel()
-    let userName = "Alena Sabyan"
     let categories = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"]
     
     var body: some View {
@@ -14,14 +13,15 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         // Header
                         HStack(alignment: .center) {
-                            Image(systemName: "sun.max.fill")
-                                .font(.system(size: 22))
+                            Image(systemName: viewModel.timeBasedIcon)
+                                .font(.system(size: 32))
                                 .foregroundColor(AppColors.primary)
+                                .offset(y: -12)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("\(viewModel.greetingText)")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(AppColors.primary)
-                                Text(userName)
+                                Text(viewModel.homeModel?.user.fullName ?? "")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(AppColors.text)
                             }

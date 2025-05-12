@@ -16,7 +16,8 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     }
     
     func login(email: String, password: String) async throws -> User {
-        let result = try await auth.signIn(withEmail: email, password: password)
+        let normalizedEmail = normalizeEmail(email)
+        let result = try await auth.signIn(withEmail: normalizedEmail, password: password)
         return User(
             id: result.user.uid,
             email: result.user.email ?? "",
@@ -25,7 +26,8 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     }
     
     func register(email: String, password: String, fullName: String) async throws -> User {
-        let result = try await auth.createUser(withEmail: email, password: password)
+        let normalizedEmail = normalizeEmail(email)
+        let result = try await auth.createUser(withEmail: normalizedEmail, password: password)
         
         let changeRequest = result.user.createProfileChangeRequest()
         changeRequest.displayName = fullName
@@ -41,4 +43,20 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     func logout() throws {
         try auth.signOut()
     }
-} 
+    
+    func resetPassword(email: String) async throws {
+        let normalizedEmail = normalizeEmail(email)
+        try await auth.sendPasswordReset(withEmail: normalizedEmail)
+    }
+    
+    func isUserRegistered(email: String) async throws -> Bool {
+        // This method will not be used for email validation
+        // We'll rely on Firebase's default behavior
+        return true
+    }
+    
+    private func normalizeEmail(_ email: String) -> String {
+        let cleanedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleanedEmail.lowercased()
+    }
+}

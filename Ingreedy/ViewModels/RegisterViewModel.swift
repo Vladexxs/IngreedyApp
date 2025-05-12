@@ -23,7 +23,7 @@ class RegisterViewModel: BaseViewModel {
         Task {
             do {
                 isLoading = true
-                error = nil // Hata mesajını temizle
+                error = nil
                 _ = try await authService.register(
                     email: registerModel.email,
                     password: registerModel.password,
@@ -40,4 +40,4 @@ class RegisterViewModel: BaseViewModel {
     func clearError() {
         error = nil
     }
-} 
+}

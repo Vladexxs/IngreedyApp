@@ -24,7 +24,7 @@ struct Ingreedy: App {
     
     init() {
         FirebaseApp.configure()
-        // Doğrudan home ekranına yönlendir, giriş kontrolü yapma
+        // Directly navigate to the home screen, no login check
         router.navigate(to: .home)
     }
     

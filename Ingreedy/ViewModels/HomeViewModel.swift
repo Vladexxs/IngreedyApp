@@ -111,4 +111,18 @@ class HomeViewModel: BaseViewModel {
             return "Good Night"
         }
     }
+    
+    var timeBasedIcon: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12:
+            return "sun.max.fill" // Morning sun
+        case 12..<18:
+            return "sun.and.horizon.fill" // Afternoon sun with horizon
+        case 18..<23:
+            return "moon.stars.fill" // Evening moon with stars
+        default:
+            return "moon.fill" // Night moon
+        }
+    }
 } 

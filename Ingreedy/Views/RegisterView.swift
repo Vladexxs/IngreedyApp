@@ -24,7 +24,7 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.fullName,
                         isSecure: false
                     )
-                    .onChange(of: viewModel.registerModel.fullName) { _ in
+                    .onChange(of: viewModel.registerModel.fullName) {
                         viewModel.clearError()
                     }
                     
@@ -34,7 +34,7 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.email,
                         isSecure: false
                     )
-                    .onChange(of: viewModel.registerModel.email) { _ in
+                    .onChange(of: viewModel.registerModel.email) {
                         viewModel.clearError()
                     }
                     
@@ -44,7 +44,7 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.password,
                         isSecure: true
                     )
-                    .onChange(of: viewModel.registerModel.password) { _ in
+                    .onChange(of: viewModel.registerModel.password) {
                         viewModel.clearError()
                     }
                     
@@ -54,7 +54,7 @@ struct RegisterView: View {
                         text: $viewModel.registerModel.confirmPassword,
                         isSecure: true
                     )
-                    .onChange(of: viewModel.registerModel.confirmPassword) { _ in
+                    .onChange(of: viewModel.registerModel.confirmPassword) {
                         viewModel.clearError()
                     }
                     

@@ -49,14 +49,28 @@ class LoginViewModel: BaseViewModel {
         do {
             let userAuthentication = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
             guard let idToken = userAuthentication.user.idToken?.tokenString else {
-                handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Google ID Token alınamadı."]))
+                handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get Google ID Token."]))
                 return
             }
+            
+            // Get user's full name from Google
+            let fullName = userAuthentication.user.profile?.name ?? ""
+            
             let accessToken = userAuthentication.user.accessToken.tokenString
             let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
             isLoading = true
             error = nil
-            _ = try await Auth.auth().signIn(with: credential)
+            
+            // Sign in with Firebase
+            let authResult = try await Auth.auth().signIn(with: credential)
+            
+            // Update user's display name if it's empty
+            if authResult.user.displayName?.isEmpty ?? true {
+                let changeRequest = authResult.user.createProfileChangeRequest()
+                changeRequest.displayName = fullName
+                try await changeRequest.commitChanges()
+            }
+            
             isLoading = false
             isLoggedIn = true
         } catch {
@@ -65,4 +79,22 @@ class LoginViewModel: BaseViewModel {
             handleError(error)
         }
     }
-} 
+    
+    func resetPassword(email: String) async {
+        do {
+            isLoading = true
+            error = nil
+            try await authService.resetPassword(email: email)
+            isLoading = false
+        } catch {
+            isLoading = false
+            handleError(error)
+        }
+    }
+    
+    // Normalize email address
+    private func normalizeEmail(_ email: String) -> String {
+        let cleanedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleanedEmail.lowercased()
+    }
+}
