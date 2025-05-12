@@ -6,7 +6,6 @@ protocol AuthenticationServiceProtocol {
     func register(email: String, password: String, fullName: String) async throws -> User
     func logout() throws
     func resetPassword(email: String) async throws
-    func isUserRegistered(email: String) async throws -> Bool
     var currentUser: User? { get }
 }
 

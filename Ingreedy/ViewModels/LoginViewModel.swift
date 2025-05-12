@@ -17,26 +17,20 @@ class LoginViewModel: BaseViewModel {
     func login() {
         Task {
             do {
-                await MainActor.run {
-                    isLoading = true
-                    error = nil
-                }
+                isLoading = true
+                error = nil
                 
                 _ = try await authService.login(
                     email: loginModel.email,
                     password: loginModel.password
                 )
                 
-                await MainActor.run {
-                    isLoading = false
-                    isLoggedIn = true
-                }
+                isLoading = false
+                isLoggedIn = true
             } catch {
-                await MainActor.run {
-                    isLoading = false
-                    isLoggedIn = false
-                    handleError(error)
-                }
+                isLoading = false
+                isLoggedIn = false
+                handleError(error)
             }
         }
     }
@@ -47,6 +41,9 @@ class LoginViewModel: BaseViewModel {
     
     func signInWithGoogle(presentingViewController: UIViewController) async {
         do {
+            isLoading = true
+            error = nil
+            
             let userAuthentication = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
             guard let idToken = userAuthentication.user.idToken?.tokenString else {
                 handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get Google ID Token."]))
@@ -58,8 +55,6 @@ class LoginViewModel: BaseViewModel {
             
             let accessToken = userAuthentication.user.accessToken.tokenString
             let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
-            isLoading = true
-            error = nil
             
             // Sign in with Firebase
             let authResult = try await Auth.auth().signIn(with: credential)
@@ -90,11 +85,5 @@ class LoginViewModel: BaseViewModel {
             isLoading = false
             handleError(error)
         }
-    }
-    
-    // Normalize email address
-    private func normalizeEmail(_ email: String) -> String {
-        let cleanedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        return cleanedEmail.lowercased()
     }
 }

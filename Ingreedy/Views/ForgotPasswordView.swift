@@ -70,13 +70,13 @@ struct ForgotPasswordView: View {
     
     func sendReset() async {
         // Cleaned email
-        let cleanedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanedEmail = ValidationUtils.normalizeEmail(email)
         
         guard !cleanedEmail.isEmpty else {
             viewModel.error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter your email address."])
             return
         }
-        guard isValidEmail(cleanedEmail) else {
+        guard ValidationUtils.isValidEmail(cleanedEmail) else {
             viewModel.error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter a valid email address."])
             return
         }
@@ -88,12 +88,6 @@ struct ForgotPasswordView: View {
         if viewModel.error == nil {
             showSuccess = true
         }
-    }
-    
-    func isValidEmail(_ email: String) -> Bool {
-        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
-        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
-        return emailPred.evaluate(with: email)
     }
 }
 
