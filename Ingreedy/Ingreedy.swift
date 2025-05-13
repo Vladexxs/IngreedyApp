@@ -24,8 +24,8 @@ struct Ingreedy: App {
     
     init() {
         FirebaseApp.configure()
-        // Directly navigate to the home screen, no login check
-        router.navigate(to: .home)
+        // Check auth status and navigate to appropriate screen
+        router.checkAuthAndNavigate()
     }
     
     var body: some Scene {

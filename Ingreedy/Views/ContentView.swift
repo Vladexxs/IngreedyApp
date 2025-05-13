@@ -1,18 +1,21 @@
 import SwiftUI
 import FirebaseCore
 
+/// Ana içerik görünümü
 struct ContentView: View {
+    // MARK: - Properties
     @EnvironmentObject private var router: Router
     
+    // MARK: - Body
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background
+                // Arka plan
                 AppColors.background.edgesIgnoringSafeArea(.all)
                 
-                // Content area
+                // İçerik alanı
                 VStack(spacing: 0) {
-                    // Main Content Area with all pages
+                    // Ana içerik alanı - tüm sayfaları içerir
                     ZStack {
                         switch router.currentRoute {
                         case .login:
@@ -25,11 +28,13 @@ struct ContentView: View {
                             RecipeListView()
                         case .ingredientSuggestion:
                             IngredientSuggestionView()
+                        case .profile:
+                            ProfileView()
                         }
                     }
                     .frame(width: geometry.size.width)
                     
-                    // Show tab bar only when logged in
+                    // Tab bar'ı sadece oturum açıldığında göster
                     if router.currentRoute != .login && router.currentRoute != .register {
                         CustomTabBar()
                             .frame(height: 90)
@@ -42,17 +47,20 @@ struct ContentView: View {
                 }
             }
         }
-        .edgesIgnoringSafeArea(.bottom) // Important: ignore bottom safe area
+        .edgesIgnoringSafeArea(.bottom) // Alt güvenli alanı yoksay
     }
 }
 
-// CustomTabBar definition
+/// Özelleştirilmiş tab bar
 struct CustomTabBar: View {
+    // MARK: - Properties
     @EnvironmentObject private var router: Router
     
+    // MARK: - Body
     var body: some View {
         HStack {
             Spacer()
+            // Ana Sayfa butonu
             Button(action: {
                 router.navigate(to: .home)
             }) {
@@ -66,6 +74,7 @@ struct CustomTabBar: View {
                 }
             }
             Spacer()
+            // Arama butonu
             Button(action: {
                 router.navigate(to: .recipes)
             }) {
@@ -79,6 +88,7 @@ struct CustomTabBar: View {
                 }
             }
             Spacer()
+            // Malzeme önerisi butonu
             Button(action: {
                 router.navigate(to: .ingredientSuggestion)
             }) {
@@ -93,6 +103,7 @@ struct CustomTabBar: View {
                 .offset(y: -15)
             }
             Spacer()
+            // Bildirimler butonu (henüz aktif değil)
             VStack(spacing: 5) {
                 Image(systemName: "bell")
                     .font(.title2)
@@ -102,13 +113,18 @@ struct CustomTabBar: View {
                     .foregroundColor(AppColors.primary)
             }
             Spacer()
-            VStack(spacing: 5) {
-                Image(systemName: "person")
-                    .font(.title2)
-                    .foregroundColor(AppColors.primary)
-                Text("Profile")
-                    .font(.caption)
-                    .foregroundColor(AppColors.primary)
+            // Profil butonu
+            Button(action: {
+                router.navigate(to: .profile)
+            }) {
+                VStack(spacing: 5) {
+                    Image(systemName: "person")
+                        .font(.title2)
+                        .foregroundColor(router.currentRoute == .profile ? AppColors.accent : AppColors.primary)
+                    Text("Profile")
+                        .font(.caption)
+                        .foregroundColor(router.currentRoute == .profile ? AppColors.accent : AppColors.primary)
+                }
             }
             Spacer()
         }
@@ -117,6 +133,7 @@ struct CustomTabBar: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     ContentView()
         .environmentObject(Router())
