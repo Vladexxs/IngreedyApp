@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 struct RecipeListView: View {
     @StateObject private var viewModel = RecipeViewModel()
@@ -6,6 +7,7 @@ struct RecipeListView: View {
     @State private var selectedIngredients: Set<String> = []
     
     var body: some View {
+        let userId = Auth.auth().currentUser?.uid ?? ""
         NavigationStack {
             ZStack {
                 AppColors.background.ignoresSafeArea()
@@ -42,10 +44,18 @@ struct RecipeListView: View {
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
                                 ForEach(viewModel.recipes) { recipe in
-                                    NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
-                                        RecipeGridCard(recipe: recipe)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
+                                    let isFavorite = viewModel.userFavorites.contains(recipe.id)
+                                    RecipeGridCard(
+                                        recipe: recipe,
+                                        isFavorite: isFavorite,
+                                        onFavoriteToggle: {
+                                            if isFavorite {
+                                                viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
+                                            } else {
+                                                viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                            }
+                                        }
+                                    )
                                 }
                             }
                             .padding(.horizontal, 16)
@@ -55,7 +65,9 @@ struct RecipeListView: View {
                 }
             }
             .onAppear {
+                viewModel.userId = userId
                 viewModel.fetchRecipes()
+                viewModel.fetchUserFavorites()
             }
         }
     }

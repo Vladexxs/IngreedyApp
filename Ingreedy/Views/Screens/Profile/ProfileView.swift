@@ -15,56 +15,51 @@ struct ProfileView: View {
     // MARK: - Body
     var body: some View {
         ZStack {
-            // Arka plan
             AppColors.background
                 .ignoresSafeArea()
-            
-            VStack(spacing: AppConstants.Spacing.large) {
-                // Başlık
-                Text("Profile")
-                    .font(.system(size: AppConstants.FontSize.title, weight: .bold))
-                    .foregroundColor(AppColors.primary)
-                    .padding(.top, AppConstants.Spacing.extraLarge)
-                
-                // Kullanıcı bilgileri veya yükleniyor mesajı
-                if let user = viewModel.user {
-                    profileContent(user: user)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Favori Tariflerim")
-                            .font(.headline)
-                            .padding(.top)
-                        if viewModel.favoriteRecipes.isEmpty {
-                            Text("Henüz favori tarifiniz yok.")
-                                .font(.subheadline)
-                                .foregroundColor(AppColors.text)
-                                .padding(.vertical, 2)
-                        } else {
-                            ForEach(viewModel.favoriteRecipes, id: \ .id) { recipe in
-                                Text(recipe.name)
+            ScrollView {
+                VStack(spacing: AppConstants.Spacing.large) {
+                    // Başlık
+                    Text("Profile")
+                        .font(.system(size: AppConstants.FontSize.title, weight: .bold))
+                        .foregroundColor(AppColors.primary)
+                        .padding(.top, AppConstants.Spacing.extraLarge)
+                    // Kullanıcı bilgileri veya yükleniyor mesajı
+                    if let user = viewModel.user {
+                        profileContent(user: user)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Favori Tariflerim")
+                                .font(.headline)
+                                .padding(.top)
+                            if viewModel.favoriteRecipes.isEmpty {
+                                Text("Henüz favori tarifiniz yok.")
                                     .font(.subheadline)
-                                    .foregroundColor(AppColors.primary)
+                                    .foregroundColor(AppColors.text)
                                     .padding(.vertical, 2)
+                            } else {
+                                ForEach(viewModel.favoriteRecipes, id: \ .id) { recipe in
+                                    Text(recipe.name)
+                                        .font(.subheadline)
+                                        .foregroundColor(AppColors.primary)
+                                        .padding(.vertical, 2)
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Text("User information not available")
+                            .foregroundColor(AppColors.text)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Text("User information not available")
-                        .foregroundColor(AppColors.text)
+                    Spacer()
+                    // Çıkış butonu
+                    logoutButton
                 }
-                
-                Spacer()
-                
-                // Çıkış butonu
-                logoutButton
+                .padding(.horizontal, AppConstants.Spacing.extraLarge)
             }
-            .padding(.horizontal, AppConstants.Spacing.extraLarge)
-            
             // Yükleniyor göstergesi
             if viewModel.isLoading {
                 LoadingView()
             }
-            
             // Hata göstergesi
             if let error = viewModel.error {
                 ErrorView(

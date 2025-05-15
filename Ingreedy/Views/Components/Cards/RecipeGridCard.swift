@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct RecipeGridCard: View {
-    @State private var isFavorite = false
     let recipe: Recipe
+    let isFavorite: Bool
+    let onFavoriteToggle: () -> Void
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -65,7 +66,7 @@ struct RecipeGridCard: View {
             .cornerRadius(22)
             .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
             
-            Button(action: { isFavorite.toggle() }) {
+            Button(action: { onFavoriteToggle() }) {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .foregroundColor(isFavorite ? .red : AppColors.primary)
                     .padding(8)
