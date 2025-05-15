@@ -70,13 +70,13 @@ struct ForgotPasswordView: View {
     
     func sendReset() async {
         // Cleaned email
-        let cleanedEmail = ValidationUtils.normalizeEmail(email)
+        let cleanedEmail = email.normalizedEmail
         
         guard !cleanedEmail.isEmpty else {
             viewModel.error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter your email address."])
             return
         }
-        guard ValidationUtils.isValidEmail(cleanedEmail) else {
+        guard cleanedEmail.isValidEmail else {
             viewModel.error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter a valid email address."])
             return
         }

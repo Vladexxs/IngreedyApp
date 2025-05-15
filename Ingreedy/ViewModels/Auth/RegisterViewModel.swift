@@ -36,8 +36,4 @@ class RegisterViewModel: BaseViewModel {
             }
         }
     }
-    
-    func clearError() {
-        error = nil
-    }
 }

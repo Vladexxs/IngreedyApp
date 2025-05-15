@@ -27,17 +27,15 @@ class ProfileViewModel: BaseViewModel {
     
     /// Kullanıcıyı sistemden çıkışını gerçekleştirir
     func logout() {
-        do {
-            isLoading = true
-            error = nil
-            
-            try authService.logout()
-            
-            isLoading = false
-            isLoggedOut = true
-        } catch {
-            isLoading = false
-            handleError(error)
-        }
+        performNetwork({ completion in
+            do {
+                try self.authService.logout()
+                completion(.success(()))
+            } catch {
+                completion(.failure(error))
+            }
+        }, onSuccess: { [weak self] _ in
+            self?.isLoggedOut = true
+        })
     }
 } 

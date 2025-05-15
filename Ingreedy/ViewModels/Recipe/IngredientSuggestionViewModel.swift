@@ -1,11 +1,9 @@
 import Foundation
 
-class IngredientSuggestionViewModel: ObservableObject {
+class IngredientSuggestionViewModel: BaseViewModel {
     @Published var userIngredients: [String] = []
     @Published var suggestedRecipes: [Recipe] = []
     @Published var partialMatchRecipes: [(recipe: Recipe, matchingIngredients: [String], missingIngredients: [String])] = []
-    @Published var isLoading = false
-    @Published var error: Error?
     @Published var searchText: String = "" {
         didSet { updateIngredientSuggestions() }
     }
@@ -15,7 +13,8 @@ class IngredientSuggestionViewModel: ObservableObject {
     private var allIngredients: Set<String> = []
     private var allRecipes: [Recipe] = []
 
-    init() {
+    override init() {
+        super.init()
         fetchAllIngredients()
     }
 
@@ -29,7 +28,7 @@ class IngredientSuggestionViewModel: ObservableObject {
                     self?.allRecipes = recipes
                     self?.collectAllIngredients(from: recipes)
                 case .failure(let error):
-                    self?.error = error
+                    self?.handleError(error)
                 }
             }
         }

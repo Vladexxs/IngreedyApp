@@ -35,10 +35,6 @@ class LoginViewModel: BaseViewModel {
         }
     }
     
-    func clearError() {
-        error = nil
-    }
-    
     func signInWithGoogle(presentingViewController: UIViewController) async {
         do {
             isLoading = true

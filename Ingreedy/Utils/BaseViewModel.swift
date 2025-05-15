@@ -30,4 +30,29 @@ class BaseViewModel: ObservableObject {
     func handleError(_ error: Error) {
         self.error = error
     }
+    
+    /// Hata bilgisini temizler
+    func clearError() {
+        self.error = nil
+    }
+    
+    /// Ortak network işlemleri için generic yardımcı fonksiyon
+    func performNetwork<T>(
+        _ block: @escaping (@escaping (Result<T, Error>) -> Void) -> Void,
+        onSuccess: @escaping (T) -> Void
+    ) {
+        isLoading = true
+        error = nil
+        block { [weak self] result in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                switch result {
+                case .success(let value):
+                    onSuccess(value)
+                case .failure(let error):
+                    self?.handleError(error)
+                }
+            }
+        }
+    }
 } 
