@@ -42,7 +42,8 @@ class RecipeService {
     }
     
     func fetchRecipes(completion: @escaping (Result<[Recipe], Error>) -> Void) {
-        guard let url = URL(string: baseURL) else {
+        // Tüm tarifleri çekmek için limit=50 parametresi ekleniyor
+        guard let url = URL(string: baseURL + "?limit=50") else {
             completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }

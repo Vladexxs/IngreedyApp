@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 class HomeViewModel: BaseViewModel {
     @Published var homeModel: HomeModel?
@@ -11,6 +12,7 @@ class HomeViewModel: BaseViewModel {
             fetchPopularRecipesByMealType()
         }
     }
+    @Published var userFavorites: [Int] = []
     private let authService: AuthenticationServiceProtocol
     private let recipeService = RecipeService()
     
@@ -97,6 +99,47 @@ class HomeViewModel: BaseViewModel {
             return "moon.stars.fill" // Evening moon with stars
         default:
             return "moon.fill" // Night moon
+        }
+    }
+    
+    /// Kullanıcının favori tariflerini Firestore'dan çeker
+    func fetchUserFavorites() {
+        guard let userId = homeModel?.user.id else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).getDocument { snapshot, error in
+            guard let data = snapshot?.data(), let favorites = data["favorites"] as? [Int] else {
+                DispatchQueue.main.async {
+                    self.userFavorites = []
+                }
+                return
+            }
+            DispatchQueue.main.async {
+                self.userFavorites = favorites
+            }
+        }
+    }
+
+    /// Favori tarif ekler
+    func addRecipeToFavorites(recipeId: Int, completion: ((Error?) -> Void)? = nil) {
+        guard let userId = homeModel?.user.id else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).updateData([
+            "favorites": FieldValue.arrayUnion([recipeId])
+        ]) { error in
+            self.fetchUserFavorites()
+            completion?(error)
+        }
+    }
+
+    /// Favori tariften çıkarır
+    func removeRecipeFromFavorites(recipeId: Int, completion: ((Error?) -> Void)? = nil) {
+        guard let userId = homeModel?.user.id else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).updateData([
+            "favorites": FieldValue.arrayRemove([recipeId])
+        ]) { error in
+            self.fetchUserFavorites()
+            completion?(error)
         }
     }
 } 

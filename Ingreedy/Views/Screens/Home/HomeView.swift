@@ -93,10 +93,18 @@ struct HomeView: View {
                         .padding(.bottom, 8)
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
                             ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
-                                NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
-                                    PopularRecipeCard(recipe: recipe)
-                                }
-                                .buttonStyle(PlainButtonStyle())
+                                let isFavorite = viewModel.userFavorites.contains(recipe.id)
+                                PopularRecipeCard(
+                                    recipe: recipe,
+                                    isFavorite: isFavorite,
+                                    onFavoriteToggle: {
+                                        if isFavorite {
+                                            viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
+                                        } else {
+                                            viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                        }
+                                    }
+                                )
                             }
                         }
                         .padding(.horizontal, 16)
@@ -105,6 +113,9 @@ struct HomeView: View {
                     .padding(.bottom, 8)
                 }
             }
+        }
+        .onAppear {
+            viewModel.fetchUserFavorites()
         }
     }
 }

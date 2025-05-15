@@ -29,6 +29,25 @@ struct ProfileView: View {
                 // Kullanıcı bilgileri veya yükleniyor mesajı
                 if let user = viewModel.user {
                     profileContent(user: user)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Favori Tariflerim")
+                            .font(.headline)
+                            .padding(.top)
+                        if viewModel.favoriteRecipes.isEmpty {
+                            Text("Henüz favori tarifiniz yok.")
+                                .font(.subheadline)
+                                .foregroundColor(AppColors.text)
+                                .padding(.vertical, 2)
+                        } else {
+                            ForEach(viewModel.favoriteRecipes, id: \ .id) { recipe in
+                                Text(recipe.name)
+                                    .font(.subheadline)
+                                    .foregroundColor(AppColors.primary)
+                                    .padding(.vertical, 2)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text("User information not available")
                         .foregroundColor(AppColors.text)
@@ -61,6 +80,9 @@ struct ProfileView: View {
             if isLoggedOut {
                 router.navigate(to: .login)
             }
+        }
+        .onAppear {
+            viewModel.fetchFavoriteRecipes()
         }
     }
     
