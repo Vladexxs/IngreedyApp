@@ -45,17 +45,20 @@ struct RecipeListView: View {
                             LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
                                 ForEach(viewModel.recipes) { recipe in
                                     let isFavorite = viewModel.userFavorites.contains(recipe.id)
-                                    RecipeGridCard(
-                                        recipe: recipe,
-                                        isFavorite: isFavorite,
-                                        onFavoriteToggle: {
-                                            if isFavorite {
-                                                viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
-                                            } else {
-                                                viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                    NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                                        RecipeGridCard(
+                                            recipe: recipe,
+                                            isFavorite: isFavorite,
+                                            onFavoriteToggle: {
+                                                if isFavorite {
+                                                    viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
+                                                } else {
+                                                    viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                                }
                                             }
-                                        }
-                                    )
+                                        )
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal, 16)

@@ -7,33 +7,48 @@ struct RecipeGridCard: View {
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 170, height: 120)
-                            .clipped()
-                    } placeholder: {
-                        RoundedRectangle(cornerRadius: 18)
-                            .fill(AppColors.card)
-                            .frame(width: 170, height: 120)
+                    HStack {
+                        Spacer()
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 155, height: 112)
+                                .clipped()
+                                .cornerRadius(16)
+                        } placeholder: {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(AppColors.card)
+                                .frame(width: 155, height: 112)
+                        }
+                        Spacer()
                     }
-                    .cornerRadius(18)
+                    .padding(.top, 14)
+                    .padding(.horizontal, 8)
                 } else {
-                    RoundedRectangle(cornerRadius: 18)
-                        .fill(AppColors.card)
-                        .frame(width: 170, height: 120)
+                    HStack {
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(AppColors.card)
+                            .frame(width: 155, height: 112)
+                        Spacer()
+                    }
+                    .padding(.top, 14)
+                    .padding(.horizontal, 8)
                 }
                 
                 Text(recipe.name)
                     .font(.subheadline.bold())
                     .foregroundColor(AppColors.text)
                     .lineLimit(2)
-                    .frame(width: 160, alignment: .leading)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 6)
+                    .padding(.horizontal, 16)
                 
-                Spacer()
+                Spacer(minLength: 0)
                 // Alt satır: süre ve zorluk, modern ve hizalı
                 HStack {
                     HStack(spacing: 4) {
@@ -57,7 +72,8 @@ struct RecipeGridCard: View {
                     }
                 }
                 .padding(.top, 4)
-                .padding(.bottom, 10)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
             }
             .frame(width: 170, height: 200)
             .padding(.vertical, 8)

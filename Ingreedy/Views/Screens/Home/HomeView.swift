@@ -94,17 +94,20 @@ struct HomeView: View {
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
                             ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
                                 let isFavorite = viewModel.userFavorites.contains(recipe.id)
-                                PopularRecipeCard(
-                                    recipe: recipe,
-                                    isFavorite: isFavorite,
-                                    onFavoriteToggle: {
-                                        if isFavorite {
-                                            viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
-                                        } else {
-                                            viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                                    PopularRecipeCard(
+                                        recipe: recipe,
+                                        isFavorite: isFavorite,
+                                        onFavoriteToggle: {
+                                            if isFavorite {
+                                                viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
+                                            } else {
+                                                viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal, 16)

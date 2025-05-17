@@ -9,8 +9,11 @@ protocol AuthenticationServiceProtocol {
     var currentUser: User? { get }
 }
 
-struct User {
+struct User: Identifiable, Codable {
     let id: String
     let email: String
     let fullName: String
+    var favorites: [Int] = []
+    var friends: [String] = []
+    var profileImageUrl: String? = nil
 }
