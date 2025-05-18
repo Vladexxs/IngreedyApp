@@ -21,7 +21,7 @@ struct ProfileView: View {
                 VStack(spacing: 0) {
                     ProfileHeaderView()
                     if let user = viewModel.user {
-                        ProfileInfoCard(user: user)
+                        ProfileInfoCard(viewModel: viewModel)
                             .onTapGesture { showEditProfile = true }
                     }
                     ProfileFavoritesGridCard(
@@ -46,7 +46,12 @@ struct ProfileView: View {
             .onChange(of: viewModel.isLoggedOut) { isLoggedOut in
                 if isLoggedOut { router.navigate(to: .login) }
             }
-            .onAppear { viewModel.fetchFavoriteRecipes() }
+            .onAppear {
+                if let user = viewModel.user {
+                    viewModel.fetchUser(withId: user.id)
+                }
+                viewModel.fetchFavoriteRecipes()
+            }
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(viewModel: viewModel, isPresented: $showEditProfile)
             }

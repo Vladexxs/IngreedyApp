@@ -11,7 +11,8 @@ class ProfileViewModel: BaseViewModel {
     @Published var user: User?
     @Published var isLoggedOut: Bool = false
     @Published var favoriteRecipes: [Recipe] = []
-    @Published var selectedImage: UIImage?
+    @Published var selectedImage: UIImage? // Kullanıcının galeriden seçtiği yeni resim
+    @Published var downloadedProfileImage: UIImage? // Storage'dan indirilen mevcut profil resmi
     @Published var isUploading = false
     
     // MARK: - Private Properties
@@ -22,6 +23,10 @@ class ProfileViewModel: BaseViewModel {
         self.authService = authService
         super.init()
         fetchCurrentUser()
+        // Mevcut kullanıcının fotoğrafını başlangıçta yükle
+        if let userId = self.user?.id {
+            fetchUser(withId: userId) // Bu, fetchUser içindeki testDownloadImage'i tetikleyecek
+        }
     }
     
     // MARK: - Public Methods
@@ -42,6 +47,8 @@ class ProfileViewModel: BaseViewModel {
             }
         }, onSuccess: { [weak self] _ in
             self?.isLoggedOut = true
+            self?.downloadedProfileImage = nil // Çıkış yapıldığında resmi temizle
+            self?.user = nil
         })
     }
     
@@ -87,24 +94,35 @@ class ProfileViewModel: BaseViewModel {
         }
     }
 
-    // Firestore'dan kullanıcıyı çek
+    // Firestore'dan kullanıcıyı çek ve profil fotoğrafını indirmeyi tetikle
     func fetchUser(withId id: String) {
         let db = Firestore.firestore()
-        db.collection("users").document(id).getDocument { snapshot, error in
-            guard let data = snapshot?.data() else { return }
+        db.collection("users").document(id).getDocument { [weak self] snapshot, error in
+            guard let self = self, let data = snapshot?.data() else { return }
             do {
                 let jsonData = try JSONSerialization.data(withJSONObject: data)
-                let user = try JSONDecoder().decode(User.self, from: jsonData)
+                struct FirestoreUser: Codable {
+                    let email: String
+                    let fullName: String
+                    var favorites: [Int]
+                    var friends: [String]
+                    var profileImageUrl: String?
+                }
+                let firestoreUser = try JSONDecoder().decode(FirestoreUser.self, from: jsonData)
                 let userWithId = User(
                     id: id,
-                    email: user.email,
-                    fullName: user.fullName,
-                    favorites: user.favorites,
-                    friends: user.friends,
-                    profileImageUrl: user.profileImageUrl
+                    email: firestoreUser.email,
+                    fullName: firestoreUser.fullName,
+                    favorites: firestoreUser.favorites,
+                    friends: firestoreUser.friends,
+                    profileImageUrl: firestoreUser.profileImageUrl
                 )
                 DispatchQueue.main.async {
                     self.user = userWithId
+                    // Eğer profil URL'si varsa, resmi indirmeyi dene
+                    if let imageUrl = firestoreUser.profileImageUrl, !imageUrl.isEmpty {
+                        self.downloadAndSetProfileImage(fromPathForUserId: id) // Path ile indir
+                    }
                 }
             } catch {
                 print("User decode error: \(error)")
@@ -126,31 +144,92 @@ class ProfileViewModel: BaseViewModel {
         }
     }
 
-    // Profil fotoğrafı yükle ve Firestore'a URL kaydet
+    // Sadece profil fotoğrafı URL'sini güncelle
+    func updateProfileImageUrl(_ url: String) {
+        guard let user = user else { return }
+        let db = Firestore.firestore()
+        print("Updating DB with URL: \(url)")
+        
+        // URL Firestore'a kaydedildikten sonra yeni resmi indir ve ata
+        // downloadAndSetProfileImage(fromPathForUserId: user.id) // Path ile indir
+
+        db.collection("users").document(user.id).updateData([
+            "profileImageUrl": url
+        ]) { [weak self] error in
+            guard let self = self else { return }
+            if let error = error {
+                print("Profil fotoğrafı URL güncelleme hatası: \(error)")
+                return
+            }
+            DispatchQueue.main.async {
+                print("Firestore güncellendi: \(url)")
+                self.user?.profileImageUrl = url
+                // URL güncellendikten sonra path kullanarak indir.
+                self.downloadAndSetProfileImage(fromPathForUserId: self.user!.id)
+                print("Local user profileImageUrl: \(self.user?.profileImageUrl ?? "nil")")
+            }
+        }
+    }
+
+    // Profil fotoğrafı yükle ve URL'yi güncelle, sonra resmi indir
     func uploadProfileImage(_ image: UIImage) {
         guard let user = user else { return }
         isUploading = true
+        self.downloadedProfileImage = image // Yükleme sırasında geçici olarak seçilen resmi göster
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-        let ref = Storage.storage().reference().child("profile_images/\(user.id).jpg")
-        ref.putData(imageData, metadata: nil) { [weak self] _, error in
+        let imagePath = "profile_images/\(user.id).jpg"
+        let ref = Storage.storage().reference().child(imagePath)
+        let metadata = StorageMetadata()
+        metadata.contentType = "image/jpeg"
+        ref.putData(imageData, metadata: metadata) { [weak self] _, error in
             guard let self = self else { return }
             if let error = error {
                 print("Upload error: \(error)")
                 self.isUploading = false
+                // Hata durumunda eski indirilen resmi (varsa) veya placeholder'ı göstermek için nil yap
+                // self.downloadAndSetProfileImage(fromPathForUserId: user.id) // Tekrar eskiyi çekmeyi dene ya da
+                // self.downloadedProfileImage = nil // eğer placeholder istiyorsak
                 return
             }
             ref.downloadURL { url, error in
                 self.isUploading = false
-                guard let url = url else { return }
-                var updatedUser = user
-                updatedUser.profileImageUrl = url.absoluteString
-                self.saveUser(updatedUser) { error in
-                    if error == nil {
-                        DispatchQueue.main.async {
-                            self.user = updatedUser
-                        }
-                    }
+                if let error = error {
+                    print("Download URL error: \(error)")
+                    return
                 }
+                guard let downloadUrl = url else { 
+                    print("URL is nil after upload")
+                    return 
+                }
+                print("Obtained download URL: \(downloadUrl.absoluteString)")
+                self.updateProfileImageUrl(downloadUrl.absoluteString) // Bu, downloadAndSetProfileImage'i tetikleyecek
+            }
+        }
+    }
+
+    // Profil fotoğrafını Storage path'inden indir ve ata
+    func downloadAndSetProfileImage(fromPathForUserId userId: String) {
+        let imagePath = "profile_images/\(userId).jpg"
+        let storageRef = Storage.storage().reference().child(imagePath)
+
+        print("[DownloadSDK] Storage referansı ile indirme deneniyor: \(imagePath)")
+        
+        storageRef.getData(maxSize: 10 * 1024 * 1024) { [weak self] data, error in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if let error = error {
+                    let storageError = StorageErrorCode(rawValue: (error as NSError).code) ?? .unknown
+                    print("[DownloadSDK] İndirme hatası (SDK): \(error.localizedDescription) - Hata Kodu: \(storageError)")
+                    self.downloadedProfileImage = nil // Hata durumunda resmi temizle
+                    return
+                }
+                guard let data = data, let image = UIImage(data: data) else {
+                    print("[DownloadSDK] Veri alınamadı veya UIImage oluşturulamadı (SDK).")
+                    self.downloadedProfileImage = nil // Hata durumunda resmi temizle
+                    return
+                }
+                print("[DownloadSDK] İndirme BAŞARILI! UIImage oluşturuldu ve atandı (SDK).")
+                self.downloadedProfileImage = image
             }
         }
     }
