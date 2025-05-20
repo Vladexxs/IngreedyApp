@@ -7,6 +7,7 @@ struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @EnvironmentObject private var router: Router
     @State private var showEditProfile = false
+    @State private var showSideMenu = false
     
     // MARK: - Initialization
     init() {
@@ -19,7 +20,11 @@ struct ProfileView: View {
             ZStack {
                 AppColors.background.ignoresSafeArea()
                 VStack(spacing: 0) {
-                    ProfileHeaderView()
+                    ProfileHeaderView(onSettingsTapped: {
+                        withAnimation {
+                            showSideMenu = true
+                        }
+                    })
                     if let user = viewModel.user {
                         ProfileInfoCard(viewModel: viewModel)
                             .onTapGesture { showEditProfile = true }
@@ -42,6 +47,9 @@ struct ProfileView: View {
                         dismissAction: { viewModel.error = nil }
                     )
                 }
+                
+                // Side Menu
+                ProfileSideMenu(isShowing: $showSideMenu, viewModel: viewModel)
             }
             .onChange(of: viewModel.isLoggedOut) { isLoggedOut in
                 if isLoggedOut { router.navigate(to: .login) }

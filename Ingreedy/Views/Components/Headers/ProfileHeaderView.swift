@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileHeaderView: View {
+    var onSettingsTapped: (() -> Void)? = nil
     var body: some View {
         HStack {
             Text("Account")
@@ -8,7 +9,7 @@ struct ProfileHeaderView: View {
                 .foregroundColor(AppColors.primary)
             Spacer()
             Button(action: {
-                // Ayarlar aksiyonu
+                onSettingsTapped?()
             }) {
                 Image(systemName: "gearshape")
                     .font(.system(size: 22, weight: .bold))
