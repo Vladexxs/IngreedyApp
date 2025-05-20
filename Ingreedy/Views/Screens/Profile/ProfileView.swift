@@ -49,7 +49,9 @@ struct ProfileView: View {
                 }
                 
                 // Side Menu
-                ProfileSideMenu(isShowing: $showSideMenu, viewModel: viewModel)
+                ProfileSideMenu(isShowing: $showSideMenu, viewModel: viewModel, onEditProfile: {
+                    showEditProfile = true
+                })
             }
             .onChange(of: viewModel.isLoggedOut) { isLoggedOut in
                 if isLoggedOut { router.navigate(to: .login) }

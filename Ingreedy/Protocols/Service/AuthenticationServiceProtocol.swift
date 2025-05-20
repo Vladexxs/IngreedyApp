@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+// import Ingreedy (if needed for module)
 
 protocol AuthenticationServiceProtocol {
     func login(email: String, password: String) async throws -> User
@@ -8,12 +9,4 @@ protocol AuthenticationServiceProtocol {
     func resetPassword(email: String) async throws
     var currentUser: User? { get }
 }
-
-struct User: Identifiable, Codable {
-    let id: String
-    let email: String
-    let fullName: String
-    var favorites: [Int] = []
-    var friends: [String] = []
-    var profileImageUrl: String? = nil
-}
+// User struct removed. Use the one from Models/User.swift

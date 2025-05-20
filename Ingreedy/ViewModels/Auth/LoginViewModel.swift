@@ -62,6 +62,11 @@ class LoginViewModel: BaseViewModel {
                 try await changeRequest.commitChanges()
             }
             
+            // Ensure Firestore user document exists
+            if let user = Auth.auth().currentUser {
+                try await FirebaseAuthenticationService.shared.ensureFirestoreUserDocument(for: user, fullName: fullName)
+            }
+            
             isLoading = false
             isLoggedIn = true
         } catch {

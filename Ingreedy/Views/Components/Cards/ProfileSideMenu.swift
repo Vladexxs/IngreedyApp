@@ -4,6 +4,7 @@ struct ProfileSideMenu: View {
     @Binding var isShowing: Bool
     @ObservedObject var viewModel: ProfileViewModel
     @EnvironmentObject private var router: Router
+    var onEditProfile: (() -> Void)? = nil
     
     var body: some View {
         ZStack {
@@ -20,11 +21,10 @@ struct ProfileSideMenu: View {
             
             // Side menu content
             HStack {
-                Spacer()
                 VStack(alignment: .leading, spacing: 0) {
                     // Header
                     HStack {
-                        Text("Ayarlar")
+                        Text("Settings")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(AppColors.primary)
@@ -48,22 +48,23 @@ struct ProfileSideMenu: View {
                     // Menu Items
                     ScrollView {
                         VStack(spacing: 0) {
-                            MenuItemView(icon: "person.circle", title: "Profil Düzenle") {
-                                // Handle profile edit
+                            MenuItemView(icon: "person.circle", title: "Edit Profile") {
+                                onEditProfile?()
+                                withAnimation { isShowing = false }
                             }
                             
-                            MenuItemView(icon: "questionmark.circle", title: "Yardım") {
+                            MenuItemView(icon: "questionmark.circle", title: "Help") {
                                 // Handle help
                             }
                             
-                            MenuItemView(icon: "info.circle", title: "Hakkında") {
+                            MenuItemView(icon: "info.circle", title: "About") {
                                 // Handle about
                             }
                             
                             Divider()
                                 .padding(.vertical, 8)
                             
-                            MenuItemView(icon: "rectangle.portrait.and.arrow.right", title: "Çıkış Yap") {
+                            MenuItemView(icon: "rectangle.portrait.and.arrow.right", title: "Logout") {
                                 viewModel.logout()
                             }
                             .foregroundColor(.red)
@@ -72,10 +73,11 @@ struct ProfileSideMenu: View {
                 }
                 .frame(width: 280)
                 .background(AppColors.background)
-                .cornerRadius(20, corners: [.topLeft, .bottomLeft])
+                .cornerRadius(20, corners: [.topRight, .bottomRight])
                 .shadow(color: AppColors.shadow, radius: 10, x: 0, y: 0)
+                Spacer()
             }
-            .offset(x: isShowing ? 0 : 280)
+            .offset(x: isShowing ? 0 : -280)
         }
         .animation(.spring(), value: isShowing)
     }

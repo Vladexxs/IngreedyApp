@@ -20,10 +20,10 @@ struct EditProfileView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 24) {
-                // Üstte yer alan iptal butonu
+            VStack(spacing: 32) {
+                // Top bar with Cancel
                 HStack {
-                    Button("İptal") { 
+                    Button("Cancel") { 
                         isPresented = false 
                     }
                     .foregroundColor(.red)
@@ -31,63 +31,93 @@ struct EditProfileView: View {
                 }
                 .padding(.horizontal)
                 
-                // Profil Fotoğrafı
-                ZStack {
-                    if let image = viewModel.selectedImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .clipShape(Circle())
-                            .frame(width: 100, height: 100)
-                    } else if let urlString = viewModel.user?.profileImageUrl, let cleanUrl = cleanURL(from: urlString) {
-                        AsyncImage(url: cleanUrl) { phase in
-                            if let image = phase.image {
-                                image.resizable()
-                            } else if let error = phase.error {
-                                Circle()
-                                    .fill(Color.gray)
-                                    .onAppear {
-                                        print("Profil fotoğrafı yüklenemedi: \(error.localizedDescription)")
-                                    }
-                            } else {
-                                ProgressView()
+                // Profile Photo
+                VStack(spacing: 12) {
+                    ZStack {
+                        if let image = viewModel.selectedImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .clipShape(Circle())
+                                .frame(width: 120, height: 120)
+                                .shadow(radius: 8)
+                        } else if let urlString = viewModel.user?.profileImageUrl, let cleanUrl = cleanURL(from: urlString) {
+                            AsyncImage(url: cleanUrl) { phase in
+                                if let image = phase.image {
+                                    image.resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } else if let error = phase.error {
+                                    Circle()
+                                        .fill(Color.gray)
+                                        .onAppear {
+                                            print("Profile image failed: \(error.localizedDescription)")
+                                        }
+                                } else {
+                                    ProgressView()
+                                }
                             }
+                            .id(cleanUrl.absoluteString)
+                            .clipShape(Circle())
+                            .frame(width: 120, height: 120)
+                            .shadow(radius: 8)
+                        } else {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 120, height: 120)
                         }
-                        .id(cleanUrl.absoluteString)
-                        .clipShape(Circle())
-                        .frame(width: 100, height: 100)
-                        .onAppear {
-                            print("Edit profile clean URL: \(cleanUrl.absoluteString)")
+                        PhotosPicker(selection: $selectedItem, matching: .images) {
+                            Circle()
+                                .strokeBorder(Color.accentColor, lineWidth: 2)
+                                .frame(width: 120, height: 120)
+                                .background(Color.clear)
+                                .overlay(
+                                    Image(systemName: "camera.fill")
+                                        .font(.system(size: 28, weight: .bold))
+                                        .foregroundColor(.accentColor)
+                                        .background(Circle().fill(Color.white.opacity(0.8)).frame(width: 48, height: 48))
+                                        .offset(y: 40)
+                                )
                         }
-                    } else {
-                        Circle()
-                            .fill(Color.gray)
-                            .frame(width: 100, height: 100)
+                        .opacity(0.7)
                     }
-                    PhotosPicker(selection: $selectedItem, matching: .images) {
-                        Circle()
-                            .strokeBorder(Color.accentColor, lineWidth: 2)
-                            .frame(width: 100, height: 100)
-                            .overlay(
-                                Image(systemName: "camera.fill")
-                                    .foregroundColor(.accentColor)
-                            )
+                    Button("Change Photo") {
+                        // PhotosPicker zaten yukarıda
                     }
-                    .opacity(0.7)
+                    .font(.subheadline)
+                    .foregroundColor(.accentColor)
+                    .disabled(true)
                 }
-
+                
+                // User Info
+                VStack(spacing: 8) {
+                    if let user = viewModel.user {
+                        Text(user.fullName)
+                            .font(.title3.bold())
+                            .foregroundColor(.primary)
+                        Text(user.email)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.top, 8)
+                
                 Spacer()
-
-                Button("Kaydet") {
+                
+                // Save Button
+                Button("Save") {
                     if let image = viewModel.selectedImage {
                         viewModel.uploadProfileImage(image)
                     }
                     isPresented = false
                 }
                 .buttonStyle(.borderedProminent)
-                .padding(.bottom)
+                .font(.headline)
+                .padding(.bottom, 24)
             }
             .padding()
-            .navigationTitle("Profili Düzenle")
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
             .onChange(of: selectedItem) { newItem in
                 if let newItem {
                     Task {

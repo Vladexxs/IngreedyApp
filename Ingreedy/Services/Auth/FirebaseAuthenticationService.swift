@@ -1,10 +1,12 @@
 import Foundation
 import FirebaseAuth
+import FirebaseFirestore
 import Combine
 
 class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     static let shared = FirebaseAuthenticationService()
     private let auth = Auth.auth()
+    private let db = Firestore.firestore()
     
     var currentUser: User? {
         guard let firebaseUser = auth.currentUser else { return nil }
@@ -25,6 +27,19 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
         changeRequest.displayName = fullName
         try await changeRequest.commitChanges()
         
+        // Create user document in Firestore with all required fields
+        let userData: [String: Any] = [
+            "id": result.user.uid,
+            "email": normalizedEmail,
+            "fullName": fullName,
+            "createdAt": FieldValue.serverTimestamp(),
+            "favorites": [],
+            "friends": [],
+            "profileImageUrl": ""
+        ]
+        
+        try await db.collection("users").document(result.user.uid).setData(userData)
+        
         return createUserFromFirebaseUser(result.user, fullName: fullName)
     }
     
@@ -41,7 +56,29 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
         return User(
             id: firebaseUser.uid,
             email: firebaseUser.email ?? "",
-            fullName: fullName ?? firebaseUser.displayName ?? ""
+            fullName: fullName ?? firebaseUser.displayName ?? "",
+            favorites: [],
+            friends: [],
+            profileImageUrl: nil,
+            createdAt: nil
         )
+    }
+    
+    // Ensure Firestore user document exists for Google Sign-In users
+    func ensureFirestoreUserDocument(for firebaseUser: FirebaseAuth.User, fullName: String? = nil) async throws {
+        let docRef = db.collection("users").document(firebaseUser.uid)
+        let doc = try await docRef.getDocument()
+        if !doc.exists {
+            let userData: [String: Any] = [
+                "id": firebaseUser.uid,
+                "email": firebaseUser.email ?? "",
+                "fullName": fullName ?? firebaseUser.displayName ?? "",
+                "createdAt": FieldValue.serverTimestamp(),
+                "favorites": [],
+                "friends": [],
+                "profileImageUrl": ""
+            ]
+            try await docRef.setData(userData)
+        }
     }
 }

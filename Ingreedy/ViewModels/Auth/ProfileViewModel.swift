@@ -99,33 +99,37 @@ class ProfileViewModel: BaseViewModel {
         let db = Firestore.firestore()
         db.collection("users").document(id).getDocument { [weak self] snapshot, error in
             guard let self = self, let data = snapshot?.data() else { return }
-            do {
-                let jsonData = try JSONSerialization.data(withJSONObject: data)
-                struct FirestoreUser: Codable {
-                    let email: String
-                    let fullName: String
-                    var favorites: [Int]
-                    var friends: [String]
-                    var profileImageUrl: String?
+            // Her alanı tek tek kontrol et ve default değer ata
+            let email = data["email"] as? String ?? ""
+            let fullName = data["fullName"] as? String ?? ""
+            let favorites = data["favorites"] as? [Int] ?? []
+            // friends alanı array of string veya array of dict olabilir
+            var friends: [Friend] = []
+            if let friendsRaw = data["friends"] as? [[String: Any]] {
+                friends = friendsRaw.compactMap { dict in
+                    guard let fullName = dict["fullName"] as? String else { return nil }
+                    let profileImageUrl = dict["profileImageUrl"] as? String
+                    return Friend(fullName: fullName, profileImageUrl: profileImageUrl)
                 }
-                let firestoreUser = try JSONDecoder().decode(FirestoreUser.self, from: jsonData)
-                let userWithId = User(
-                    id: id,
-                    email: firestoreUser.email,
-                    fullName: firestoreUser.fullName,
-                    favorites: firestoreUser.favorites,
-                    friends: firestoreUser.friends,
-                    profileImageUrl: firestoreUser.profileImageUrl
-                )
-                DispatchQueue.main.async {
-                    self.user = userWithId
-                    // Eğer profil URL'si varsa, resmi indirmeyi dene
-                    if let imageUrl = firestoreUser.profileImageUrl, !imageUrl.isEmpty {
-                        self.downloadAndSetProfileImage(fromPathForUserId: id) // Path ile indir
-                    }
+            } else if let friendsString = data["friends"] as? [String] {
+                friends = friendsString.map { Friend(fullName: $0, profileImageUrl: nil) }
+            }
+            let profileImageUrl = data["profileImageUrl"] as? String
+            let createdAt = (data["createdAt"] as? Timestamp)?.dateValue()
+            let userWithId = User(
+                id: id,
+                email: email,
+                fullName: fullName,
+                favorites: favorites,
+                friends: friends,
+                profileImageUrl: profileImageUrl,
+                createdAt: createdAt
+            )
+            DispatchQueue.main.async {
+                self.user = userWithId
+                if let imageUrl = profileImageUrl, !imageUrl.isEmpty {
+                    self.downloadAndSetProfileImage(fromPathForUserId: id)
                 }
-            } catch {
-                print("User decode error: \(error)")
             }
         }
     }
@@ -163,7 +167,18 @@ class ProfileViewModel: BaseViewModel {
             }
             DispatchQueue.main.async {
                 print("Firestore güncellendi: \(url)")
-                self.user?.profileImageUrl = url
+                if let user = self.user {
+                    let updatedUser = User(
+                        id: user.id,
+                        email: user.email,
+                        fullName: user.fullName,
+                        favorites: user.favorites,
+                        friends: user.friends,
+                        profileImageUrl: url,
+                        createdAt: user.createdAt
+                    )
+                    self.user = updatedUser
+                }
                 // URL güncellendikten sonra path kullanarak indir.
                 self.downloadAndSetProfileImage(fromPathForUserId: self.user!.id)
                 print("Local user profileImageUrl: \(self.user?.profileImageUrl ?? "nil")")
