@@ -30,6 +30,8 @@ struct ContentView: View {
                             IngredientSuggestionView()
                         case .profile:
                             ProfileView()
+                        case .sharedRecipes:
+                            SharedRecipesView()
                         }
                     }
                     .frame(width: geometry.size.width)
@@ -103,14 +105,18 @@ struct CustomTabBar: View {
                 .offset(y: -15)
             }
             Spacer()
-            // Bildirimler butonu (henüz aktif değil)
-            VStack(spacing: 5) {
-                Image(systemName: "bell")
-                    .font(.title2)
-                    .foregroundColor(AppColors.primary)
-                Text("Alerts")
-                    .font(.caption)
-                    .foregroundColor(AppColors.primary)
+            // Paylaşılanlar butonu (eski Alerts yerine)
+            Button(action: {
+                router.navigate(to: .sharedRecipes)
+            }) {
+                VStack(spacing: 5) {
+                    Image(systemName: "person.2.fill")
+                        .font(.title2)
+                        .foregroundColor(router.currentRoute == .sharedRecipes ? AppColors.accent : AppColors.primary)
+                    Text("Paylaşılanlar")
+                        .font(.caption)
+                        .foregroundColor(router.currentRoute == .sharedRecipes ? AppColors.accent : AppColors.primary)
+                }
             }
             Spacer()
             // Profil butonu

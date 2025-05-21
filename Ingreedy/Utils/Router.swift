@@ -9,6 +9,7 @@ enum Route {
     case recipes
     case ingredientSuggestion
     case profile
+    case sharedRecipes
     
     /// Rotaların metin karşılıkları
     func description() -> String {
@@ -19,6 +20,7 @@ enum Route {
         case .recipes: return "Recipes"
         case .ingredientSuggestion: return "Ingredient Suggestion"
         case .profile: return "Profile"
+        case .sharedRecipes: return "Paylaşılanlar"
         }
     }
 }
