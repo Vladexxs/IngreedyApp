@@ -219,7 +219,8 @@ struct ReceivedRecipeCard: View {
                 .frame(height: 120)
                 // Emoji overlay (reaction) - far bottom left, outside bubble
                 if let reaction = reaction, !showEmojiMenu {
-                    emojiOverlay(for: reaction)
+                    // Emoji için ReceivedRecipeCard'a uygun offset değerleri
+                    emojiOverlay(for: reaction, offsetX: -18, offsetY: 18)
                 }
                 // Emoji menu
                 if showEmojiMenu {
@@ -281,7 +282,7 @@ struct ReceivedRecipeCard: View {
     }
 
     @ViewBuilder
-    private func emojiOverlay(for reaction: String) -> some View {
+    private func emojiOverlay(for reaction: String, offsetX: CGFloat, offsetY: CGFloat) -> some View {
         Text(emojiText(for: reaction))
             .font(.system(size: 20))
             .padding(6)
@@ -289,7 +290,7 @@ struct ReceivedRecipeCard: View {
             .clipShape(Circle())
             .shadow(color: Color.black.opacity(0.15), radius: 4, y: 1)
             .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-            .offset(x: -18, y: 18) // Adjusted offset
+            .offset(x: offsetX, y: offsetY) // Offset'i dışarıdan al
             .zIndex(2)
     }
 }
@@ -368,13 +369,14 @@ struct SentRecipeCard: View {
                     .overlay(ProgressView())
                     .onAppear { print("[DEBUG] SentRecipeCard - Kullanıcı nesnesi nil") }
             }
+            
             ZStack(alignment: .center) {
                 BubbleWithTail()
                     .fill(AppColors.card)
                     .shadow(color: AppColors.shadow, radius: 4, y: 1)
                 VStack(spacing: 0) {
                     if let recipeDetail = recipeDetail {
-                        if let imageUrl = recipeDetail.image, let url = URL(string: imageUrl), !imageUrl.isEmpty {
+                        if let imageUrl = recipeDetail.image, !imageUrl.isEmpty {
                             KFImage(URL(string: imageUrl))
                                 .placeholder {
                                     RoundedRectangle(cornerRadius: 14)
@@ -415,16 +417,47 @@ struct SentRecipeCard: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 10)
+                
+                // Emoji overlay (reaction) - far bottom right, relative to bubble
+                if let reaction = recipe.reaction {
+                    // Emoji için SentRecipeCard'a uygun offset değerleri
+                    // Baloncuğun sağ alt köşesine ve dışına konumlandırmak için pozitif offsetler
+                    emojiOverlay(for: reaction, offsetX: 95, offsetY: 50)
+                }
             }
-            .frame(height: 120)
+            .frame(height: 120) // Keep frame for ZStack
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 2)
+        .padding(.trailing, 24) // Add trailing padding for right tail
         .onAppear {
             print("[DEBUG] SentRecipeCard - Kullanıcı bilgileri:")
             print("- Kullanıcı: \(user?.fullName ?? "nil")")
             print("- Profil URL: \(user?.profileImageUrl ?? "nil")")
+            print("- Tepki: \(recipe.reaction ?? "Yok")")
         }
+    }
+    
+    func emojiText(for reaction: String) -> String {
+        switch reaction {
+        case "like": return "👍"
+        case "neutral": return "😐"
+        case "dislike": return "👎"
+        default: return ""
+        }
+    }
+
+    @ViewBuilder
+    private func emojiOverlay(for reaction: String, offsetX: CGFloat, offsetY: CGFloat) -> some View {
+        Text(emojiText(for: reaction))
+            .font(.system(size: 20))
+            .padding(6)
+            .background(.ultraThinMaterial)
+            .clipShape(Circle())
+            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 1)
+            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+            .offset(x: offsetX, y: offsetY) // Offset'i dışarıdan al
+            .zIndex(2)
     }
 }
 

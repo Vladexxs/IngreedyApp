@@ -45,16 +45,12 @@ class SharedRecipesViewModel: ObservableObject {
         do {
             let recipes = try await service.fetchSentRecipes()
             sentRecipes = recipes
-            
             // Mevcut kullanıcı bilgilerini yükle
             if let currentUserId = Auth.auth().currentUser?.uid {
-                print("[DEBUG] Mevcut kullanıcı ID: \(currentUserId)")
                 await fetchUserIfNeeded(userId: currentUserId)
-            } else {
-                print("[DEBUG] Mevcut kullanıcı bulunamadı")
             }
         } catch {
-            errorMessage = "Gönderdiğim tarifler yüklenemedi."
+            errorMessage = "Gönderdiğim tarifler yüklenemedi: \(error.localizedDescription)"
         }
         isLoading = false
     }
@@ -72,7 +68,7 @@ class SharedRecipesViewModel: ObservableObject {
         }
     }
     
-    // Tarif gönderme (isteğe bağlı, UI'de kullanmak isterseniz)
+    // Tarif gönderme (isteğe bağlı, UI'de kullanmak istersem)
     func sendRecipe(toUserId: String, recipeId: Int) async {
         do {
             try await service.sendRecipe(toUserId: toUserId, recipeId: recipeId)
@@ -85,36 +81,24 @@ class SharedRecipesViewModel: ObservableObject {
     
     // Kullanıcıyı çek
     func fetchUserIfNeeded(userId: String) async {
-        print("[DEBUG] fetchUserIfNeeded başladı - userId: \(userId)")
-        if userCache[userId] != nil { 
-            print("[DEBUG] Kullanıcı cache'de bulundu: \(userCache[userId]?.fullName ?? "isim yok")")
-            print("[DEBUG] Cache'deki profil resmi URL: \(userCache[userId]?.profileImageUrl ?? "URL yok")")
-            return 
-        }
+        if userCache[userId] != nil { return }
         
         let db = Firestore.firestore()
         do {
             let doc = try await db.collection("users").document(userId).getDocument()
-            guard let data = doc.data() else { 
-                print("[DEBUG] Firestore'da kullanıcı bulunamadı: \(userId)")
-                return 
-            }
+            guard let data = doc.data() else { return }
             
-            print("[DEBUG] Firestore'dan gelen veri: \(data)")
             let profileImageUrl = data["profileImageUrl"] as? String
-            print("[DEBUG] Firestore'dan gelen profil resmi URL: \(profileImageUrl ?? "URL yok")")
             
             // URL'yi kontrol et ve düzelt
             var finalProfileImageUrl = profileImageUrl
             if let url = profileImageUrl, !url.isEmpty {
                 if let urlComponents = URLComponents(string: url) {
                     var components = urlComponents
-                    components.scheme = "https" // HTTPS kullan
-                    // Port numarasını kaldır (443 varsayılan HTTPS portu)
+                    components.scheme = "https"
                     components.port = nil
                     if let newUrl = components.url?.absoluteString {
                         finalProfileImageUrl = newUrl
-                        print("[DEBUG] URL düzeltildi: \(newUrl)")
                     }
                 }
             }
@@ -129,15 +113,9 @@ class SharedRecipesViewModel: ObservableObject {
                 createdAt: nil
             )
             
-            print("[DEBUG] Oluşturulan kullanıcı nesnesi:")
-            print("- ID: \(user.id)")
-            print("- İsim: \(user.fullName)")
-            print("- Profil Resmi URL: \(user.profileImageUrl ?? "URL yok")")
-            
             userCache[userId] = user
-            print("[DEBUG] Kullanıcı cache'e eklendi")
         } catch {
-            print("[DEBUG] Firestore'dan kullanıcı çekilirken hata: \(error.localizedDescription)")
+            // print("[DEBUG] Firestore'dan kullanıcı çekilirken hata: \(error.localizedDescription)")
         }
     }
     
