@@ -417,15 +417,14 @@ struct SentRecipeCard: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 10)
-                
-                // Emoji overlay (reaction) - far bottom right, relative to bubble
-                if let reaction = recipe.reaction {
-                    // Emoji için SentRecipeCard'a uygun offset değerleri
-                    // Baloncuğun sağ alt köşesine ve dışına konumlandırmak için pozitif offsetler
-                    emojiOverlay(for: reaction, offsetX: 95, offsetY: 50)
-                }
             }
             .frame(height: 120) // Keep frame for ZStack
+            // Emoji overlay (reaction) - positioned relative to the bubble
+            if let reaction = recipe.reaction {
+                // Emoji için SentRecipeCard'a uygun offset değerleri
+                // Baloncuğun sağ alt köşesine ve dışına konumlandırmak için offsetler
+                emojiOverlay(for: reaction, offsetX: -30, offsetY: 50) // Offset değerlerini ayarlayacağız
+            }
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 2)
