@@ -369,66 +369,56 @@ struct SentRecipeCard: View {
                     .overlay(ProgressView())
                     .onAppear { print("[DEBUG] SentRecipeCard - Kullanıcı nesnesi nil") }
             }
-            
-            ZStack(alignment: .center) {
-                BubbleWithTail()
-                    .fill(AppColors.card)
-                    .shadow(color: AppColors.shadow, radius: 4, y: 1)
-                VStack(spacing: 0) {
-                    if let recipeDetail = recipeDetail {
-                        if let imageUrl = recipeDetail.image, !imageUrl.isEmpty {
-                            KFImage(URL(string: imageUrl))
-                                .placeholder {
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .fill(AppColors.card)
-                                }
-                                .onFailure { error in
-                                    print("[DEBUG] Kingfisher yükleme hatası: \(error.localizedDescription) - URL: \(imageUrl)")
-                                }
-                                .onSuccess { result in
-                                    print("[DEBUG] Kingfisher yükleme başarılı: \(imageUrl)")
-                                }
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 70)
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .shadow(color: AppColors.accent.opacity(0.18), radius: 6, y: 2)
+            ZStack(alignment: .bottomTrailing) {
+                ZStack(alignment: .center) {
+                    BubbleWithTail()
+                        .fill(AppColors.card)
+                        .shadow(color: AppColors.shadow, radius: 4, y: 1)
+                    VStack(spacing: 0) {
+                        if let recipeDetail = recipeDetail {
+                            if let imageUrl = recipeDetail.image, !imageUrl.isEmpty {
+                                KFImage(URL(string: imageUrl))
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 70)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                                    .shadow(color: AppColors.accent.opacity(0.18), radius: 6, y: 2)
+                            } else {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(AppColors.card)
+                                    .frame(width: 100, height: 70)
+                            }
+                            Text(recipeDetail.name)
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(AppColors.primary)
+                                .lineLimit(1)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 8)
+                                .padding(.horizontal, 6)
                         } else {
                             RoundedRectangle(cornerRadius: 14)
                                 .fill(AppColors.card)
                                 .frame(width: 100, height: 70)
+                            Text("Yükleniyor...")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(AppColors.secondary)
+                                .padding(.top, 8)
+                                .padding(.horizontal, 6)
                         }
-                        Text(recipeDetail.name)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(AppColors.primary)
-                            .lineLimit(1)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 8)
-                            .padding(.horizontal, 6)
-                    } else {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(AppColors.card)
-                            .frame(width: 100, height: 70)
-                        Text("Yükleniyor...")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(AppColors.secondary)
-                            .padding(.top, 8)
                     }
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 10)
                 }
-                .padding(.vertical, 10)
-                .padding(.horizontal, 10)
-            }
-            .frame(height: 120) // Keep frame for ZStack
-            // Emoji overlay (reaction) - positioned relative to the bubble
-            if let reaction = recipe.reaction {
-                // Emoji için SentRecipeCard'a uygun offset değerleri
-                // Baloncuğun sağ alt köşesine ve dışına konumlandırmak için offsetler
-                emojiOverlay(for: reaction, offsetX: -30, offsetY: 50) // Offset değerlerini ayarlayacağız
+                .frame(height: 120)
+                // Emoji overlay (reaction) - balonun sağ alt köşesine, çok dışına taşmadan
+                if let reaction = recipe.reaction {
+                    emojiOverlay(for: reaction, offsetX: 18, offsetY: 18)
+                }
             }
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 2)
-        .padding(.trailing, 24) // Add trailing padding for right tail
+        .padding(.trailing, 24)
         .onAppear {
             print("[DEBUG] SentRecipeCard - Kullanıcı bilgileri:")
             print("- Kullanıcı: \(user?.fullName ?? "nil")")
@@ -455,7 +445,7 @@ struct SentRecipeCard: View {
             .clipShape(Circle())
             .shadow(color: Color.black.opacity(0.15), radius: 4, y: 1)
             .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-            .offset(x: offsetX, y: offsetY) // Offset'i dışarıdan al
+            .offset(x: offsetX, y: offsetY)
             .zIndex(2)
     }
 }
