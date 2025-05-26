@@ -116,10 +116,12 @@ struct SharedRecipesView: View {
                                     ForEach(viewModel.sentRecipes) { recipe in
                                         SentRecipeCard(
                                             recipe: recipe,
-                                            user: viewModel.userCache[Auth.auth().currentUser?.uid ?? ""],
+                                            sender: viewModel.userCache[Auth.auth().currentUser?.uid ?? ""],
+                                            receiver: viewModel.userCache[recipe.toUserId],
                                             recipeDetail: viewModel.recipeCache[recipe.recipeId]
                                         )
                                         .task {
+                                            await viewModel.fetchUserIfNeeded(userId: recipe.toUserId)
                                             await viewModel.fetchRecipeIfNeeded(recipeId: recipe.recipeId)
                                         }
                                     }
@@ -167,62 +169,63 @@ struct ReceivedRecipeCard: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
+            Spacer(minLength: 0)
             ZStack(alignment: .bottomLeading) {
-                ZStack(alignment: .center) {
-                    BubbleWithTailRight()
-                        .fill(AppColors.card)
-                        .shadow(color: AppColors.shadow, radius: 4, y: 1)
-                    VStack(spacing: 0) {
-                        if let recipeDetail = recipeDetail {
-                            if let imageUrl = recipeDetail.image, let url = URL(string: imageUrl), !imageUrl.isEmpty {
-                                KFImage(URL(string: imageUrl))
-                                    .placeholder {
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(AppColors.card)
-                                    }
-                                    .onFailure { error in
-                                        print("[DEBUG] Kingfisher yükleme hatası: \(error.localizedDescription) - URL: \(imageUrl)")
-                                    }
-                                    .onSuccess { result in
-                                        print("[DEBUG] Kingfisher yükleme başarılı: \(imageUrl)")
-                                    }
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 100, height: 70)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                                    .shadow(color: AppColors.accent.opacity(0.18), radius: 6, y: 2)
-                            } else {
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(AppColors.card)
-                                    .frame(width: 100, height: 70)
-                            }
-                            Text(recipeDetail.name)
-                                .font(.system(size: 16, weight: .bold))
+                BubbleWithTailRight()
+                    .fill(AppColors.card)
+                    .shadow(color: AppColors.shadow, radius: 4, y: 1)
+                HStack(alignment: .center, spacing: 16) {
+                    // En solda: Sadece isim ve altında 'Gönderildi' badge'i
+                    if let user = user {
+                        VStack(spacing: 2) {
+                            Text(user.fullName)
+                                .font(.caption)
                                 .foregroundColor(AppColors.primary)
                                 .lineLimit(1)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 8)
-                                .padding(.horizontal, 6)
-                        } else {
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(AppColors.card)
-                                .frame(width: 100, height: 70)
-                            Text("Yükleniyor...")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.secondary)
-                                .padding(.top, 8)
+                                .truncationMode(.tail)
+                            Text("tarafından")
+                                .font(.caption2)
+                                .foregroundColor(AppColors.primary)
+                            Text("Gönderildi")
+                                .font(.caption2)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(AppColors.accent)
+                                .cornerRadius(10)
                         }
+                        .frame(minWidth: 60, alignment: .center)
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 10)
+                    // Ortada: Yemek adı
+                    Text(recipeDetail?.name ?? "Yükleniyor...")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppColors.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                    // En sağda: Yemek resmi
+                    if let imageUrl = recipeDetail?.image, !imageUrl.isEmpty {
+                        KFImage(URL(string: imageUrl))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 48, height: 48)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .padding(.trailing, 8)
+                    } else {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                            .padding(.trailing, 8)
+                    }
                 }
-                .frame(height: 120)
-                // Emoji overlay (reaction) - far bottom left, outside bubble
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .frame(height: 90, alignment: .center)
+                // Emoji overlay sol alt köşe
                 if let reaction = reaction, !showEmojiMenu {
-                    // Emoji için ReceivedRecipeCard'a uygun offset değerleri
                     emojiOverlay(for: reaction, offsetX: -18, offsetY: 18)
                 }
-                // Emoji menu
                 if showEmojiMenu {
                     EmojiMenu { emoji in
                         onEmojiSelect(emoji)
@@ -231,21 +234,11 @@ struct ReceivedRecipeCard: View {
                     .zIndex(3)
                 }
             }
-            // Profil fotoğrafı (gönderen)
+            .frame(height: 90)
+            // Profil fotoğrafı en sağda (balonun dışında)
             if let user = user {
                 if let urlString = user.profileImageUrl, !urlString.isEmpty {
                     KFImage(URL(string: urlString))
-                        .placeholder {
-                            Circle()
-                                .fill(AppColors.primary.opacity(0.2))
-                                .overlay(ProgressView())
-                        }
-                        .onFailure { error in
-                            print("[DEBUG] Kingfisher yükleme hatası: \(error.localizedDescription) - URL: \(urlString)")
-                        }
-                        .onSuccess { result in
-                            print("[DEBUG] Kingfisher yükleme başarılı: \(urlString)")
-                        }
                         .resizable()
                         .scaledToFill()
                         .frame(width: 48, height: 48)
@@ -253,16 +246,14 @@ struct ReceivedRecipeCard: View {
                         .shadow(color: AppColors.primary.opacity(0.12), radius: 4, y: 1)
                 } else {
                     Circle().fill(AppColors.primary.opacity(0.2))
-                        .overlay(Image(systemName: "person.fill").foregroundColor(.white))
+                        .overlay(Text(user.fullName.prefix(1)).font(.caption).foregroundColor(AppColors.primary))
                         .frame(width: 48, height: 48)
                         .shadow(color: AppColors.primary.opacity(0.12), radius: 4, y: 1)
-                        .onAppear { print("[DEBUG] Profil resmi URL'si geçersiz veya boş - Kullanıcı: \(user.fullName)") }
                 }
             } else {
                 Circle().fill(AppColors.primary.opacity(0.08))
                     .frame(width: 48, height: 48)
                     .overlay(ProgressView())
-                    .onAppear { print("[DEBUG] Kullanıcı nesnesi nil") }
             }
         }
         .padding(.vertical, 2)
@@ -331,26 +322,16 @@ struct BubbleWithTailRight: Shape {
 
 struct SentRecipeCard: View {
     let recipe: SentSharedRecipe
-    let user: User?
+    let sender: User?      // Gönderen (her zaman sen)
+    let receiver: User?    // Alıcı (tarifi gönderdiğin kişi)
     let recipeDetail: Recipe?
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            // Profil fotoğrafı
-            if let user = user {
-                if let urlString = user.profileImageUrl, !urlString.isEmpty {
+            // Gönderen profil fotoğrafı (her zaman en solda)
+            if let sender = sender {
+                if let urlString = sender.profileImageUrl, !urlString.isEmpty {
                     KFImage(URL(string: urlString))
-                        .placeholder {
-                            Circle()
-                                .fill(AppColors.primary.opacity(0.2))
-                                .overlay(ProgressView())
-                        }
-                        .onFailure { error in
-                            print("[DEBUG] SentRecipeCard - Kingfisher yükleme hatası: \(error.localizedDescription) - URL: \(urlString)")
-                        }
-                        .onSuccess { result in
-                            print("[DEBUG] SentRecipeCard - Kingfisher yükleme başarılı: \(urlString)")
-                        }
                         .resizable()
                         .scaledToFill()
                         .frame(width: 48, height: 48)
@@ -361,70 +342,88 @@ struct SentRecipeCard: View {
                         .overlay(Image(systemName: "person.fill").foregroundColor(.white))
                         .frame(width: 48, height: 48)
                         .shadow(color: AppColors.primary.opacity(0.12), radius: 4, y: 1)
-                        .onAppear { print("[DEBUG] SentRecipeCard - Profil resmi URL'si geçersiz veya boş - Kullanıcı: \(user.fullName)") }
                 }
             } else {
                 Circle().fill(AppColors.primary.opacity(0.08))
                     .frame(width: 48, height: 48)
                     .overlay(ProgressView())
-                    .onAppear { print("[DEBUG] SentRecipeCard - Kullanıcı nesnesi nil") }
             }
+            
+            // Baloncuk
             ZStack(alignment: .bottomTrailing) {
-                ZStack(alignment: .center) {
-                    BubbleWithTail()
-                        .fill(AppColors.card)
-                        .shadow(color: AppColors.shadow, radius: 4, y: 1)
-                    VStack(spacing: 0) {
-                        if let recipeDetail = recipeDetail {
-                            if let imageUrl = recipeDetail.image, !imageUrl.isEmpty {
-                                KFImage(URL(string: imageUrl))
+                BubbleWithTail()
+                    .fill(AppColors.card)
+                    .shadow(color: AppColors.shadow, radius: 4, y: 1)
+                
+                // Baloncuk içeriği
+                HStack(alignment: .center, spacing: 16) {
+                    // En solda: Yemek resmi
+                    if let imageUrl = recipeDetail?.image, !imageUrl.isEmpty {
+                        KFImage(URL(string: imageUrl))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 48, height: 48)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .padding(.leading, 8)
+                    } else {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 48, height: 48)
+                            .padding(.leading, 8)
+                    }
+                    // Ortada: Yemek adı
+                    Text(recipeDetail?.name ?? "Yükleniyor...")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(AppColors.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.trailing, 8)
+                    // En sağda: Alıcı avatarı + isim + badge
+                    if let receiver = receiver {
+                        VStack(spacing: 4) {
+                            if let url = receiver.profileImageUrl, !url.isEmpty {
+                                KFImage(URL(string: url))
                                     .resizable()
                                     .scaledToFill()
-                                    .frame(width: 100, height: 70)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                                    .shadow(color: AppColors.accent.opacity(0.18), radius: 6, y: 2)
+                                    .frame(width: 28, height: 28)
+                                    .clipShape(Circle())
                             } else {
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(AppColors.card)
-                                    .frame(width: 100, height: 70)
+                                Circle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 28, height: 28)
+                                    .overlay(Text(receiver.fullName.prefix(1)).font(.caption).foregroundColor(AppColors.primary))
                             }
-                            Text(recipeDetail.name)
-                                .font(.system(size: 16, weight: .bold))
+                            Text(receiver.fullName)
+                                .font(.caption)
                                 .foregroundColor(AppColors.primary)
                                 .lineLimit(1)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 8)
-                                .padding(.horizontal, 6)
-                        } else {
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(AppColors.card)
-                                .frame(width: 100, height: 70)
-                            Text("Yükleniyor...")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.secondary)
-                                .padding(.top, 8)
-                                .padding(.horizontal, 6)
+                                .truncationMode(.tail)
+                            Text("Gönderildi")
+                                .font(.caption2)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(AppColors.accent)
+                                .cornerRadius(10)
                         }
+                        .frame(minWidth: 60, alignment: .center)
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 10)
                 }
-                .frame(height: 120)
-                // Emoji overlay (reaction) - balonun sağ alt köşesine, çok dışına taşmadan
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .frame(height: 90, alignment: .center)
+                
+                // Emoji overlay
                 if let reaction = recipe.reaction {
                     emojiOverlay(for: reaction, offsetX: 18, offsetY: 18)
                 }
             }
+            .frame(height: 90)
         }
         .padding(.vertical, 2)
         .padding(.horizontal, 2)
         .padding(.trailing, 24)
-        .onAppear {
-            print("[DEBUG] SentRecipeCard - Kullanıcı bilgileri:")
-            print("- Kullanıcı: \(user?.fullName ?? "nil")")
-            print("- Profil URL: \(user?.profileImageUrl ?? "nil")")
-            print("- Tepki: \(recipe.reaction ?? "Yok")")
-        }
     }
     
     func emojiText(for reaction: String) -> String {
