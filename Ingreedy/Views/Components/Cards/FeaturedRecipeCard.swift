@@ -1,31 +1,31 @@
 import SwiftUI
+import Kingfisher
 
 struct FeaturedRecipeCard: View {
     let recipe: Recipe
     var body: some View {
         ZStack(alignment: .topLeading) {
             if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 230, height: 130)
-                        .clipped()
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 22)
-                        .fill(AppColors.primary.opacity(0.15))
-                        .frame(width: 230, height: 130)
-                }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22)
-                        .fill(Color.black.opacity(0.28))
-                )
-                .cornerRadius(22)
-                .shadow(color: AppColors.primary.opacity(0.10), radius: 8, y: 4)
+                KFImage(url)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 230, height: 130)
+                    .clipped()
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22)
+                            .fill(Color.black.opacity(0.28))
+                    )
+                    .cornerRadius(22)
+                    .shadow(color: AppColors.primary.opacity(0.10), radius: 8, y: 4)
             } else {
                 RoundedRectangle(cornerRadius: 22)
                     .fill(AppColors.primary.opacity(0.15))
                     .frame(width: 230, height: 130)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22)
+                            .fill(Color.black.opacity(0.28))
+                    )
+                    .cornerRadius(22)
                     .shadow(color: AppColors.primary.opacity(0.10), radius: 8, y: 4)
             }
             VStack(alignment: .leading, spacing: 10) {

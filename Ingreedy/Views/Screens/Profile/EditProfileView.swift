@@ -1,10 +1,12 @@
 import SwiftUI
 import PhotosUI
+import Kingfisher
 
 struct EditProfileView: View {
     @ObservedObject var viewModel: ProfileViewModel
     @Binding var isPresented: Bool
     @State private var selectedItem: PhotosPickerItem?
+    @State private var editedFullName: String = ""
     
     private func cleanURL(from urlString: String) -> URL? {
         guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
@@ -42,24 +44,12 @@ struct EditProfileView: View {
                                 .frame(width: 120, height: 120)
                                 .shadow(radius: 8)
                         } else if let urlString = viewModel.user?.profileImageUrl, let cleanUrl = cleanURL(from: urlString) {
-                            AsyncImage(url: cleanUrl) { phase in
-                                if let image = phase.image {
-                                    image.resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } else if let error = phase.error {
-                                    Circle()
-                                        .fill(Color.gray)
-                                        .onAppear {
-                                            print("Profile image failed: \(error.localizedDescription)")
-                                        }
-                                } else {
-                                    ProgressView()
-                                }
-                            }
-                            .id(cleanUrl.absoluteString)
-                            .clipShape(Circle())
-                            .frame(width: 120, height: 120)
-                            .shadow(radius: 8)
+                            KFImage(cleanUrl)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .clipShape(Circle())
+                                .frame(width: 120, height: 120)
+                                .shadow(radius: 8)
                         } else {
                             Circle()
                                 .fill(Color.gray.opacity(0.3))
@@ -91,15 +81,21 @@ struct EditProfileView: View {
                 // User Info
                 VStack(spacing: 8) {
                     if let user = viewModel.user {
-                        Text(user.fullName)
+                        TextField("Full Name", text: $editedFullName)
                             .font(.title3.bold())
                             .foregroundColor(.primary)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
                         Text(user.email)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                 }
                 .padding(.top, 8)
+                .onAppear {
+                    if let user = viewModel.user {
+                        editedFullName = user.fullName
+                    }
+                }
                 
                 Spacer()
                 
@@ -107,6 +103,10 @@ struct EditProfileView: View {
                 Button("Save") {
                     if let image = viewModel.selectedImage {
                         viewModel.uploadProfileImage(image)
+                    }
+                    if var user = viewModel.user, !editedFullName.trimmingCharacters(in: .whitespaces).isEmpty, user.fullName != editedFullName {
+                        user.fullName = editedFullName
+                        viewModel.saveUser(user)
                     }
                     isPresented = false
                 }

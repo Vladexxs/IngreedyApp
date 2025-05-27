@@ -3,7 +3,7 @@ import Foundation
 struct User: Codable, Identifiable {
     let id: String
     let email: String
-    let fullName: String
+    var fullName: String
     let favorites: [Int]
     let friends: [Friend]?
     let profileImageUrl: String?

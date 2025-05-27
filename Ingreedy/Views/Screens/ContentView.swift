@@ -60,37 +60,42 @@ struct CustomTabBar: View {
     
     // MARK: - Body
     var body: some View {
-        HStack {
-            Spacer()
-            // Ana Sayfa butonu
-            Button(action: {
-                router.navigate(to: .home)
-            }) {
-                VStack(spacing: 5) {
-                    Image(systemName: "house.fill")
-                        .font(.title2)
-                        .foregroundColor(router.currentRoute == .home ? AppColors.accent : AppColors.primary)
-                    Text("Home")
-                        .font(.caption)
-                        .foregroundColor(router.currentRoute == .home ? AppColors.accent : AppColors.primary)
-                }
+        ZStack {
+            HStack(spacing: 0) {
+                tabBarButton(
+                    icon: "house.fill",
+                    title: "Home",
+                    isSelected: router.currentRoute == .home,
+                    action: { router.navigate(to: .home) }
+                )
+                .frame(maxWidth: .infinity)
+                tabBarButton(
+                    icon: "magnifyingglass",
+                    title: "Search",
+                    isSelected: router.currentRoute == .recipes,
+                    action: { router.navigate(to: .recipes) }
+                )
+                .frame(maxWidth: .infinity)
+                Color.clear.frame(width: 64) // Ortadaki yuvarlak için boşluk
+                tabBarButton(
+                    icon: "person.2.fill",
+                    title: "Shared",
+                    isSelected: router.currentRoute == .sharedRecipes,
+                    action: { router.navigate(to: .sharedRecipes) }
+                )
+                .frame(maxWidth: .infinity)
+                tabBarButton(
+                    icon: "person",
+                    title: "Profile",
+                    isSelected: router.currentRoute == .profile,
+                    action: { router.navigate(to: .profile) }
+                )
+                .frame(maxWidth: .infinity)
             }
-            Spacer()
-            // Arama butonu
-            Button(action: {
-                router.navigate(to: .recipes)
-            }) {
-                VStack(spacing: 5) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.title2)
-                        .foregroundColor(router.currentRoute == .recipes ? AppColors.accent : AppColors.primary)
-                    Text("Search")
-                        .font(.caption)
-                        .foregroundColor(router.currentRoute == .recipes ? AppColors.accent : AppColors.primary)
-                }
-            }
-            Spacer()
-            // Malzeme önerisi butonu
+            .padding(.top, 12)
+            .padding(.bottom, 20)
+
+            // Ortadaki turuncu buton
             Button(action: {
                 router.navigate(to: .ingredientSuggestion)
             }) {
@@ -102,40 +107,24 @@ struct CustomTabBar: View {
                         .font(.title2)
                         .foregroundColor(.white)
                 }
-                .offset(y: -15)
             }
-            Spacer()
-            // Paylaşılanlar butonu (eski Alerts yerine)
-            Button(action: {
-                router.navigate(to: .sharedRecipes)
-            }) {
-                VStack(spacing: 5) {
-                    Image(systemName: "person.2.fill")
-                        .font(.title2)
-                        .foregroundColor(router.currentRoute == .sharedRecipes ? AppColors.accent : AppColors.primary)
-                    Text("Paylaşılanlar")
-                        .font(.caption)
-                        .foregroundColor(router.currentRoute == .sharedRecipes ? AppColors.accent : AppColors.primary)
-                }
-            }
-            Spacer()
-            // Profil butonu
-            Button(action: {
-                router.navigate(to: .profile)
-            }) {
-                VStack(spacing: 5) {
-                    Image(systemName: "person")
-                        .font(.title2)
-                        .foregroundColor(router.currentRoute == .profile ? AppColors.accent : AppColors.primary)
-                    Text("Profile")
-                        .font(.caption)
-                        .foregroundColor(router.currentRoute == .profile ? AppColors.accent : AppColors.primary)
-                }
-            }
-            Spacer()
+            .offset(y: -25)
         }
-        .padding(.top, 12)
-        .padding(.bottom, 20)
+    }
+
+    // Tab bar butonunu oluşturan yardımcı fonksiyon
+    @ViewBuilder
+    private func tabBarButton(icon: String, title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
+            }
+        }
     }
 }
 

@@ -142,4 +142,32 @@ class HomeViewModel: BaseViewModel {
             completion?(error)
         }
     }
+
+    /// Firestore'dan güncel kullanıcıyı çekip homeModel.user'ı günceller
+    func reloadCurrentUser(completion: (() -> Void)? = nil) {
+        guard let userId = homeModel?.user.id else { completion?(); return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).getDocument { snapshot, error in
+            guard let data = snapshot?.data() else { completion?(); return }
+            let email = data["email"] as? String ?? ""
+            let fullName = data["fullName"] as? String ?? ""
+            let favorites = data["favorites"] as? [Int] ?? []
+            let friends: [Friend] = [] // Arkadaşlar için ek alanlar gerekiyorsa eklenebilir
+            let profileImageUrl = data["profileImageUrl"] as? String
+            let createdAt: Date? = nil // Tarih alanı gerekiyorsa eklenebilir
+            let updatedUser = User(
+                id: userId,
+                email: email,
+                fullName: fullName,
+                favorites: favorites,
+                friends: friends,
+                profileImageUrl: profileImageUrl,
+                createdAt: createdAt
+            )
+            DispatchQueue.main.async {
+                self.homeModel = HomeModel(user: updatedUser)
+                completion?()
+            }
+        }
+    }
 } 

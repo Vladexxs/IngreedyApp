@@ -9,7 +9,7 @@ struct SharedRecipesView: View {
     @State private var showEmojiMenuFor: String? = nil // receivedRecipeId
     @State private var selectedRecipe: Recipe? = nil
 
-    let segmentTitles = ["Bana Gönderilenler", "Benim Gönderdiklerim"]
+    let segmentTitles = ["Received", "Sent"]
 
     var body: some View {
         ZStack {
@@ -17,7 +17,7 @@ struct SharedRecipesView: View {
             VStack(spacing: 0) {
                 // Başlık
                 HStack {
-                    Text("Paylaşılanlar")
+                    Text("Shared Recipes")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppColors.primary)
                     Spacer()
@@ -68,7 +68,7 @@ struct SharedRecipesView: View {
                         // Bana Gönderilenler
                         if viewModel.receivedRecipes.isEmpty {
                             Spacer()
-                            EmptyStateView(message: "Sana henüz tarif gönderilmedi.")
+                            EmptyStateView(message: "No recipes have been sent to you yet.")
                             Spacer()
                         } else {
                             ScrollView(showsIndicators: false) {
@@ -108,7 +108,7 @@ struct SharedRecipesView: View {
                         // Benim Gönderdiklerim
                         if viewModel.sentRecipes.isEmpty {
                             Spacer()
-                            EmptyStateView(message: "Henüz kimseye tarif göndermedin.")
+                            EmptyStateView(message: "You haven't sent any recipes yet.")
                             Spacer()
                         } else {
                             ScrollView(showsIndicators: false) {
@@ -183,10 +183,10 @@ struct ReceivedRecipeCard: View {
                                 .foregroundColor(AppColors.primary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
-                            Text("tarafından")
+                            Text("by")
                                 .font(.caption2)
                                 .foregroundColor(AppColors.primary)
-                            Text("Gönderildi")
+                            Text("Sent")
                                 .font(.caption2)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)
@@ -197,7 +197,7 @@ struct ReceivedRecipeCard: View {
                         .frame(minWidth: 60, alignment: .center)
                     }
                     // Ortada: Yemek adı
-                    Text(recipeDetail?.name ?? "Yükleniyor...")
+                    Text(recipeDetail?.name ?? "Loading...")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(AppColors.primary)
                         .lineLimit(2)
@@ -372,7 +372,7 @@ struct SentRecipeCard: View {
                             .padding(.leading, 8)
                     }
                     // Ortada: Yemek adı
-                    Text(recipeDetail?.name ?? "Yükleniyor...")
+                    Text(recipeDetail?.name ?? "Loading...")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(AppColors.primary)
                         .lineLimit(2)
@@ -399,7 +399,7 @@ struct SentRecipeCard: View {
                                 .foregroundColor(AppColors.primary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
-                            Text("Gönderildi")
+                            Text("Sent")
                                 .font(.caption2)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)

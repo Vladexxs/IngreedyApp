@@ -62,7 +62,11 @@ struct ProfileView: View {
                 }
                 viewModel.fetchFavoriteRecipes()
             }
-            .sheet(isPresented: $showEditProfile) {
+            .sheet(isPresented: $showEditProfile, onDismiss: {
+                if let user = viewModel.user {
+                    viewModel.fetchUser(withId: user.id)
+                }
+            }) {
                 EditProfileView(viewModel: viewModel, isPresented: $showEditProfile)
             }
         }

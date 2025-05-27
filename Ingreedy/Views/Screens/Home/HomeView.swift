@@ -118,6 +118,7 @@ struct HomeView: View {
             }
         }
         .onAppear {
+            viewModel.reloadCurrentUser()
             viewModel.fetchUserFavorites()
         }
     }

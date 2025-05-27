@@ -93,8 +93,10 @@ struct MenuItemView: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
+                    .foregroundColor(AppColors.primary)
                 Text(title)
                     .font(.body)
+                    .foregroundColor(title == "Logout" ? .red : AppColors.primary)
                 Spacer()
             }
             .padding()

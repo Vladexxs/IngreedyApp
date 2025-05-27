@@ -1,18 +1,16 @@
 import SwiftUI
+import Kingfisher
 
 struct RecipeCard: View {
     let recipe: Recipe
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            AsyncImage(url: URL(string: recipe.image ?? "")) { image in
-                image.resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color.gray
-            }
-            .frame(height: 150)
-            .clipped()
+            KFImage(URL(string: recipe.image ?? ""))
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(height: 150)
+                .clipped()
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(recipe.name)

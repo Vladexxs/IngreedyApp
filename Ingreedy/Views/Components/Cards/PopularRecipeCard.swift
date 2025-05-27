@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct PopularRecipeCard: View {
     let recipe: Recipe
@@ -10,18 +11,12 @@ struct PopularRecipeCard: View {
                 if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
                     HStack {
                         Spacer()
-                        AsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 155, height: 112)
-                                .clipped()
-                                .cornerRadius(16)
-                        } placeholder: {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(AppColors.card)
-                                .frame(width: 155, height: 112)
-                        }
+                        KFImage(url)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 155, height: 112)
+                            .clipped()
+                            .cornerRadius(16)
                         Spacer()
                     }
                     .padding(.top, 14)

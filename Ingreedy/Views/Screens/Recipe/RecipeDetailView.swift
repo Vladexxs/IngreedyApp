@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
+import Kingfisher
 
 struct RecipeDetailView: View {
     let recipe: Recipe
@@ -10,13 +11,10 @@ struct RecipeDetailView: View {
         ZStack(alignment: .bottom) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    AsyncImage(url: URL(string: recipe.image ?? "")) { image in
-                        image.resizable()
-                    } placeholder: {
-                        Color.gray
-                    }
-                    .frame(height: 200)
-                    .cornerRadius(12)
+                    KFImage(URL(string: recipe.image ?? ""))
+                        .resizable()
+                        .frame(height: 200)
+                        .cornerRadius(12)
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text(recipe.name)

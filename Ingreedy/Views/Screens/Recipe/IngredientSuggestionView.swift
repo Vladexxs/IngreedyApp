@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct IngredientSuggestionView: View {
     @StateObject private var viewModel = IngredientSuggestionViewModel()
@@ -121,14 +122,11 @@ struct IngredientSuggestionView: View {
                                 NavigationLink(destination: RecipeDetailView(recipe: item.recipe)) {
                                     VStack(alignment: .leading, spacing: 8) {
                                         HStack(spacing: 12) {
-                                            AsyncImage(url: URL(string: item.recipe.image ?? "")) { image in
-                                                image.resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                            } placeholder: {
-                                                Color.gray
-                                            }
-                                            .frame(width: 80, height: 80)
-                                            .cornerRadius(8)
+                                            KFImage(URL(string: item.recipe.image ?? ""))
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                                .frame(width: 80, height: 80)
+                                                .cornerRadius(8)
                                             
                                             VStack(alignment: .leading, spacing: 4) {
                                                 Text(item.recipe.name)

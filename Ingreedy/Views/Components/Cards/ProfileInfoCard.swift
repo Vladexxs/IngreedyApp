@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 struct ProfileInfoCard: View {
     @ObservedObject var viewModel: ProfileViewModel
@@ -24,28 +25,13 @@ struct ProfileInfoCard: View {
                     .clipShape(Circle())
                     .frame(width: 56, height: 56)
             } else if let urlString = viewModel.user?.profileImageUrl, let cleanUrl = cleanURL(from: urlString) {
-                AsyncImage(url: cleanUrl) { phase in
-                    if let image = phase.image {
-                        image.resizable()
-                            .onAppear {
-                                // AsyncImage başarılı olursa, bunu da viewModel'e aktarabiliriz (isteğe bağlı)
-                                // viewModel.downloadedProfileImage = image.asUIImage() // UIImage'e çevirme gerekebilir
-                            }
-                    } else if let error = phase.error {
-                        defaultUserImagePlaceholder
-                            .onAppear {
-                                print("ProfileInfoCard AsyncImage Hatası: \(error.localizedDescription)")
-                            }
-                    } else {
-                        ProgressView()
+                KFImage(cleanUrl)
+                    .resizable()
+                    .clipShape(Circle())
+                    .frame(width: 56, height: 56)
+                    .onAppear {
+                        print("ProfileInfoCard KFImage için Clean URL: \(cleanUrl.absoluteString)")
                     }
-                }
-                .id(cleanUrl.absoluteString)
-                .clipShape(Circle())
-                .frame(width: 56, height: 56)
-                .onAppear {
-                    print("ProfileInfoCard AsyncImage için Clean URL: \(cleanUrl.absoluteString)")
-                }
             } else {
                 defaultUserImagePlaceholder
             }
@@ -53,7 +39,7 @@ struct ProfileInfoCard: View {
                 Text(viewModel.user?.fullName ?? "Kullanıcı Adı")
                     .font(.headline)
                     .foregroundColor(AppColors.primary)
-                Text("Recipe Developer") // veya user.role
+                Text(viewModel.user?.email ?? "")
                     .font(.subheadline)
                     .foregroundColor(AppColors.secondary)
             }
