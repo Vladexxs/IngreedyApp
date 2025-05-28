@@ -6,74 +6,188 @@ import Kingfisher
 struct RecipeDetailView: View {
     let recipe: Recipe
     @State private var showShareSheet = false
+    @Environment(\.presentationMode) var presentationMode
+    @State private var isFavorite = false // Favori butonu için örnek
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    KFImage(URL(string: recipe.image ?? ""))
-                        .resizable()
-                        .frame(height: 200)
-                        .cornerRadius(12)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(recipe.name)
-                            .font(.title)
-                            .bold()
-                        
+            AppColors.background.ignoresSafeArea()
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Hero Image + Custom Back & Favorite Button
+                    ZStack(alignment: .top) {
+                        KFImage(URL(string: recipe.image ?? ""))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 400)
+                            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            .overlay(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.black.opacity(0.0), Color.black.opacity(0.45)]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            )
+                            .ignoresSafeArea(.all, edges: .top)
                         HStack {
-                            Label("\((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)) min", systemImage: "clock")
+                            // Back Button
+                            Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(10)
+                                    .background(Color.black.opacity(0.4))
+                                    .clipShape(Circle())
+                                    .shadow(radius: 4)
+                            }
                             Spacer()
-                            Label(recipe.difficulty ?? "", systemImage: "chart.bar")
-                            Spacer()
-                            Label("\(recipe.servings ?? 0) servings", systemImage: "person.2")
+                            // Favorite Button
+                            Button(action: { isFavorite.toggle() }) {
+                                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(isFavorite ? .red : .white)
+                                    .padding(10)
+                                    .background(Color.black.opacity(0.4))
+                                    .clipShape(Circle())
+                                    .shadow(radius: 4)
+                            }
                         }
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        
-                        Text("Ingredients")
-                            .font(.headline)
-                            .padding(.top)
-                        
-                        ForEach(recipe.ingredients ?? [], id: \.self) { ingredient in
-                            Text("• \(ingredient)")
+                        .padding(.horizontal, 20)
+                        .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top ?? 44)
+                    }
+                    .frame(height: 400)
+                    .padding(.bottom, -48)
+                    .padding(.top, -8)
+                    // Info Card (arka planı beyaz, gölgelendirme mevcut)
+                    VStack(spacing: 12) {
+                        Text(recipe.name)
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundColor(AppColors.primary)
+                            .multilineTextAlignment(.center)
+                        if let count = recipe.ingredients?.count {
+                            Text("\(count) ingredients")
+                                .font(.subheadline)
+                                .foregroundColor(AppColors.secondary)
                         }
-                        
-                        Text("Instructions")
-                            .font(.headline)
-                            .padding(.top)
-                        
-                        ForEach(recipe.instructions ?? [], id: \.self) { step in
-                            Text(step)
+                        HStack(spacing: 24) {
+                            InfoItem(icon: "clock", text: "\((recipe.prepTimeMinutes ?? 0) + (recipe.cookTimeMinutes ?? 0)) min")
+                            if let calories = recipe.caloriesPerServing {
+                                InfoItem(icon: "flame", text: "\(calories) Kcal")
+                            }
+                            if let servings = recipe.servings {
+                                InfoItem(icon: "person.2", text: "\(servings) serve")
+                            }
+                            if let diff = recipe.difficulty, !diff.isEmpty {
+                                InfoItem(icon: "chart.bar", text: diff.capitalized)
+                            }
                         }
                     }
-                    .padding()
+                    .padding(.vertical, 24)
+                    .padding(.horizontal, 24)
+                    .background(Color.white)
+                    .cornerRadius(26)
+                    .shadow(color: AppColors.shadow, radius: 10, y: 3)
+                    .padding(.horizontal, 24)
+                    .offset(y: -24)
+                    .padding(.bottom, 24)
+
+                    // Ingredients Card (daha aşağıda, spacing artırıldı)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Ingredients")
+                            .font(.headline)
+                            .foregroundColor(AppColors.primary)
+                        ForEach(recipe.ingredients ?? [], id: \.self) { ingredient in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("•")
+                                    .font(.body)
+                                    .foregroundColor(AppColors.accent)
+                                Text(ingredient)
+                                    .font(.body)
+                                    .foregroundColor(AppColors.text)
+                            }
+                        }
+                    }
+                    .padding(36)
+                    .background(AppColors.card)
+                    .cornerRadius(26)
+                    .shadow(color: AppColors.shadow, radius: 10, y: 3)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 0)
+
+                    // Instructions Card (spacing ve padding artırıldı)
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text("Cooking instruction")
+                            .font(.headline)
+                            .foregroundColor(AppColors.primary)
+                        ForEach(Array((recipe.instructions ?? []).enumerated()), id: \.element) { idx, step in
+                            HStack(alignment: .top, spacing: 14) {
+                                ZStack {
+                                    Circle()
+                                        .fill(AppColors.accent)
+                                        .frame(width: 28, height: 28)
+                                    Text("\(idx + 1)")
+                                        .font(.caption.bold())
+                                        .foregroundColor(.white)
+                                }
+                                Text(step)
+                                    .font(.body)
+                                    .foregroundColor(AppColors.text)
+                                    .padding(.top, 2)
+                            }
+                            .padding(14)
+                            .background(AppColors.card.opacity(0.8))
+                            .cornerRadius(16)
+                        }
+                    }
+                    .padding(24)
+                    .background(AppColors.card)
+                    .cornerRadius(26)
+                    .shadow(color: AppColors.shadow, radius: 10, y: 3)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 120)
                 }
             }
-            // Alt Paylaş Butonu
-            VStack {
+            // Share Button (ekranın en altında, içerikten bağımsız)
+            HStack {
                 Spacer()
-                Button(action: {
-                    showShareSheet = true
-                }) {
+                Button(action: { showShareSheet = true }) {
                     HStack {
                         Image(systemName: "paperplane.fill")
-                        Text("Paylaş")
+                        Text("Share")
                             .fontWeight(.bold)
                     }
                     .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color("MainOrange"))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
+                    .padding(.horizontal, 48)
+                    .padding(.vertical, 20)
+                    .background(AppColors.accent)
+                    .cornerRadius(22)
+                    .shadow(color: AppColors.accent.opacity(0.18), radius: 8, y: 2)
                 }
-                .padding(.bottom, 16)
+                Spacer()
             }
+            .padding(.bottom, 32)
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .edgesIgnoringSafeArea(.all)
         .sheet(isPresented: $showShareSheet) {
             UserSelectionSheet(recipeId: recipe.id)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+struct InfoItem: View {
+    let icon: String
+    let text: String
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.subheadline)
+                .foregroundColor(AppColors.accent)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(AppColors.text)
         }
     }
 }
