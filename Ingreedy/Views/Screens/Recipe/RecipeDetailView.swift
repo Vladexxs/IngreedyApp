@@ -7,7 +7,8 @@ struct RecipeDetailView: View {
     let recipe: Recipe
     @State private var showShareSheet = false
     @Environment(\.presentationMode) var presentationMode
-    @State private var isFavorite = false // Favori butonu için örnek
+    @StateObject private var viewModel = RecipeViewModel()
+    @State private var isFavorite = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -43,7 +44,13 @@ struct RecipeDetailView: View {
                             }
                             Spacer()
                             // Favorite Button
-                            Button(action: { isFavorite.toggle() }) {
+                            Button(action: {
+                                if isFavorite {
+                                    viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
+                                } else {
+                                    viewModel.addRecipeToFavorites(recipeId: recipe.id)
+                                }
+                            }) {
                                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(isFavorite ? .red : .white)
@@ -174,6 +181,15 @@ struct RecipeDetailView: View {
             UserSelectionSheet(recipeId: recipe.id)
         }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if let user = Auth.auth().currentUser {
+                viewModel.userId = user.uid
+                viewModel.fetchUserFavorites()
+            }
+        }
+        .onReceive(viewModel.$userFavorites) { favorites in
+            isFavorite = favorites.contains(recipe.id)
+        }
     }
 }
 

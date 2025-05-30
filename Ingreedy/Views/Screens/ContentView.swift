@@ -101,11 +101,12 @@ struct CustomTabBar: View {
             }) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.accent)
+                        .fill(router.currentRoute == .ingredientSuggestion ? AppColors.accent : AppColors.primary)
                         .frame(width: 64, height: 64)
-                    Image(systemName: "chef.hat")
-                        .font(.title2)
-                        .foregroundColor(.white)
+                    Image("chef-hat")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 36, height: 36)
                 }
             }
             .offset(y: -25)
