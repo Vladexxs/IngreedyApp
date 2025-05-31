@@ -12,145 +12,152 @@ struct SharedRecipesView: View {
     let segmentTitles = ["Received", "Sent"]
 
     var body: some View {
-        ZStack {
-            AppColors.background.ignoresSafeArea()
-            VStack(spacing: 0) {
-                // Başlık
-                HStack {
-                    Text("Shared Recipes")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(AppColors.primary)
-                    Spacer()
-                }
-                .padding(.top, 32)
-                .padding(.horizontal, 24)
-                // Simetrik Segment
-                HStack(spacing: 0) {
-                    ForEach(Array(segmentTitles.enumerated()), id: \.offset) { (idx, title) in
-                        Button(action: { selectedTab = idx }) {
-                            Text(title)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(selectedTab == idx ? .white : AppColors.primary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(selectedTab == idx ? AppColors.accent : AppColors.card)
-                        }
-                        .cornerRadius(idx == 0 ? 18 : 0, corners: [.topLeft, .bottomLeft])
-                        .cornerRadius(idx == segmentTitles.count - 1 ? 18 : 0, corners: [.topRight, .bottomRight])
+        NavigationStack {
+            ZStack {
+                AppColors.background.ignoresSafeArea()
+                VStack(spacing: 0) {
+                    // Başlık
+                    HStack {
+                        Text("Shared Recipes")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(AppColors.primary)
+                        Spacer()
                     }
-                }
-                .frame(maxWidth: .infinity)
-                .background(AppColors.card)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .padding(.horizontal, 24)
-                .padding(.top, 18)
-                .padding(.bottom, 8)
-                // İçerik
-                if viewModel.isLoading {
-                    Spacer()
-                    ProgressView()
-                        .tint(AppColors.accent)
-                        .scaleEffect(1.3)
-                    Spacer()
-                } else if let error = viewModel.errorMessage {
-                    Spacer()
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(.red)
-                        Text(error)
-                            .foregroundColor(AppColors.text)
-                            .font(.system(size: 16, weight: .medium))
-                    }
-                    Spacer()
-                } else {
-                    if selectedTab == 0 {
-                        // Bana Gönderilenler
-                        if viewModel.receivedRecipes.isEmpty {
-                            Spacer()
-                            EmptyStateView(message: "No recipes have been sent to you yet.")
-                            Spacer()
-                        } else {
-                            ScrollView(showsIndicators: false) {
-                                VStack(spacing: 18) {
-                                    ForEach(viewModel.receivedRecipes) { recipe in
-                                        ReceivedRecipeCard(
-                                            recipe: recipe,
-                                            user: viewModel.userCache[recipe.fromUserId],
-                                            recipeDetail: viewModel.recipeCache[recipe.recipeId],
-                                            reaction: recipe.reaction,
-                                            onTap: {
-                                                if let detail = viewModel.recipeCache[recipe.recipeId] {
-                                                    selectedRecipe = detail
-                                                }
-                                            },
-                                            onLongPress: { showEmojiMenuFor = recipe.id },
-                                            showEmojiMenu: showEmojiMenuFor == recipe.id,
-                                            onEmojiSelect: { emoji in
-                                                Task {
-                                                    await viewModel.reactToRecipe(receivedRecipeId: recipe.id, reaction: emoji)
-                                                    showEmojiMenuFor = nil
-                                                }
-                                            }
-                                        )
-                                        .task {
-                                            await viewModel.fetchUserIfNeeded(userId: recipe.fromUserId)
-                                            await viewModel.fetchRecipeIfNeeded(recipeId: recipe.recipeId)
-                                        }
-                                    }
-                                }
-                                .padding(.top, 8)
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 12)
+                    .padding(.top, 32)
+                    .padding(.horizontal, 24)
+                    // Simetrik Segment
+                    HStack(spacing: 0) {
+                        ForEach(Array(segmentTitles.enumerated()), id: \.offset) { (idx, title) in
+                            Button(action: { selectedTab = idx }) {
+                                Text(title)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(selectedTab == idx ? .white : AppColors.primary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(selectedTab == idx ? AppColors.accent : AppColors.card)
                             }
+                            .cornerRadius(idx == 0 ? 18 : 0, corners: [.topLeft, .bottomLeft])
+                            .cornerRadius(idx == segmentTitles.count - 1 ? 18 : 0, corners: [.topRight, .bottomRight])
                         }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .background(AppColors.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(.horizontal, 24)
+                    .padding(.top, 18)
+                    .padding(.bottom, 8)
+                    // İçerik
+                    if viewModel.isLoading {
+                        Spacer()
+                        ProgressView()
+                            .tint(AppColors.accent)
+                            .scaleEffect(1.3)
+                        Spacer()
+                    } else if let error = viewModel.errorMessage {
+                        Spacer()
+                        VStack(spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(.red)
+                            Text(error)
+                                .foregroundColor(AppColors.text)
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        Spacer()
                     } else {
-                        // Benim Gönderdiklerim
-                        if viewModel.sentRecipes.isEmpty {
-                            Spacer()
-                            EmptyStateView(message: "You haven't sent any recipes yet.")
-                            Spacer()
-                        } else {
-                            ScrollView(showsIndicators: false) {
-                                VStack(spacing: 18) {
-                                    ForEach(viewModel.sentRecipes) { recipe in
-                                        SentRecipeCard(
-                                            recipe: recipe,
-                                            sender: viewModel.userCache[Auth.auth().currentUser?.uid ?? ""],
-                                            receiver: viewModel.userCache[recipe.toUserId],
-                                            recipeDetail: viewModel.recipeCache[recipe.recipeId]
-                                        )
-                                        .task {
-                                            await viewModel.fetchUserIfNeeded(userId: recipe.toUserId)
-                                            await viewModel.fetchRecipeIfNeeded(recipeId: recipe.recipeId)
+                        if selectedTab == 0 {
+                            // Bana Gönderilenler
+                            if viewModel.receivedRecipes.isEmpty {
+                                Spacer()
+                                EmptyStateView(message: "No recipes have been sent to you yet.")
+                                Spacer()
+                            } else {
+                                ScrollView(showsIndicators: false) {
+                                    VStack(spacing: 18) {
+                                        ForEach(viewModel.receivedRecipes) { recipe in
+                                            ReceivedRecipeCard(
+                                                recipe: recipe,
+                                                user: viewModel.userCache[recipe.fromUserId],
+                                                recipeDetail: viewModel.recipeCache[recipe.recipeId],
+                                                reaction: recipe.reaction,
+                                                onTap: {
+                                                    if let detail = viewModel.recipeCache[recipe.recipeId] {
+                                                        selectedRecipe = detail
+                                                    }
+                                                },
+                                                onLongPress: { showEmojiMenuFor = recipe.id },
+                                                showEmojiMenu: showEmojiMenuFor == recipe.id,
+                                                onEmojiSelect: { emoji in
+                                                    Task {
+                                                        await viewModel.reactToRecipe(receivedRecipeId: recipe.id, reaction: emoji)
+                                                        showEmojiMenuFor = nil
+                                                    }
+                                                }
+                                            )
+                                            .task {
+                                                await viewModel.fetchUserIfNeeded(userId: recipe.fromUserId)
+                                                await viewModel.fetchRecipeIfNeeded(recipeId: recipe.recipeId)
+                                            }
                                         }
                                     }
+                                    .padding(.top, 8)
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 12)
                                 }
-                                .padding(.top, 8)
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 12)
+                            }
+                        } else {
+                            // Benim Gönderdiklerim
+                            if viewModel.sentRecipes.isEmpty {
+                                Spacer()
+                                EmptyStateView(message: "You haven't sent any recipes yet.")
+                                Spacer()
+                            } else {
+                                ScrollView(showsIndicators: false) {
+                                    VStack(spacing: 18) {
+                                        ForEach(viewModel.sentRecipes) { recipe in
+                                            SentRecipeCard(
+                                                recipe: recipe,
+                                                sender: viewModel.userCache[Auth.auth().currentUser?.uid ?? ""],
+                                                receiver: viewModel.userCache[recipe.toUserId],
+                                                recipeDetail: viewModel.recipeCache[recipe.recipeId],
+                                                onTap: {
+                                                    if let detail = viewModel.recipeCache[recipe.recipeId] {
+                                                        selectedRecipe = detail
+                                                    }
+                                                }
+                                            )
+                                            .task {
+                                                await viewModel.fetchUserIfNeeded(userId: recipe.toUserId)
+                                                await viewModel.fetchRecipeIfNeeded(recipeId: recipe.recipeId)
+                                            }
+                                        }
+                                    }
+                                    .padding(.top, 8)
+                                    .padding(.horizontal, 16)
+                                    .padding(.bottom, 12)
+                                }
                             }
                         }
                     }
                 }
-            }
-            .onTapGesture { showEmojiMenuFor = nil } // Emoji menüsünü kapatmak için
-            .onAppear {
-                Task {
-                    await viewModel.loadReceivedRecipes()
-                    await viewModel.loadSentRecipes()
+                .onTapGesture { showEmojiMenuFor = nil } // Emoji menüsünü kapatmak için
+                .onAppear {
+                    Task {
+                        await viewModel.loadReceivedRecipes()
+                        await viewModel.loadSentRecipes()
+                    }
                 }
+                NavigationLink(
+                    destination: selectedRecipe == nil ? nil : AnyView(RecipeDetailView(recipe: selectedRecipe!)),
+                    isActive: Binding(
+                        get: { selectedRecipe != nil },
+                        set: { if !$0 { selectedRecipe = nil } }
+                    )
+                ) {
+                    EmptyView()
+                }
+                .hidden()
             }
-            NavigationLink(
-                destination: selectedRecipe == nil ? nil : AnyView(RecipeDetailView(recipe: selectedRecipe!)),
-                isActive: Binding(
-                    get: { selectedRecipe != nil },
-                    set: { if !$0 { selectedRecipe = nil } }
-                )
-            ) {
-                EmptyView()
-            }
-            .hidden()
         }
     }
 }
@@ -325,6 +332,7 @@ struct SentRecipeCard: View {
     let sender: User?      // Gönderen (her zaman sen)
     let receiver: User?    // Alıcı (tarifi gönderdiğin kişi)
     let recipeDetail: Recipe?
+    var onTap: () -> Void  // Yeni eklenen onTap parametresi
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -424,6 +432,7 @@ struct SentRecipeCard: View {
         .padding(.vertical, 2)
         .padding(.horizontal, 2)
         .padding(.trailing, 24)
+        .onTapGesture(perform: onTap)  // onTap gesture'ını ekliyoruz
     }
     
     func emojiText(for reaction: String) -> String {
