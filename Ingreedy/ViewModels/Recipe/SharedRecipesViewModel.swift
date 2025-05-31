@@ -11,11 +11,15 @@ class SharedRecipesViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var userCache: [String: User] = [:] // userId -> User
     @Published var recipeCache: [Int: Recipe] = [:] // recipeId -> Recipe
+    @Published var newRecipeReceived: Bool = false // Deprecated - use global NotificationService
     
     private let service = SharedRecipeService()
     private let customSession: URLSession
+    private let db = Firestore.firestore()
+    var router: Router? // Router referansı (public)
     
-    init() {
+    init(router: Router? = nil) {
+        self.router = router
         let config = URLSessionConfiguration.default
         config.httpShouldUsePipelining = false
         config.httpMaximumConnectionsPerHost = 1
@@ -25,17 +29,48 @@ class SharedRecipesViewModel: ObservableObject {
         self.customSession = URLSession(configuration: config)
     }
     
-    // Bana gönderilen tarifleri çek
+    // Bana gönderilen tarifleri çek (tek seferlik fetch)
     func loadReceivedRecipes() async {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { return }
+        
         isLoading = true
         errorMessage = nil
+        
         do {
-            let recipes = try await service.fetchReceivedRecipes()
+            let receivedRef = db.collection("users").document(currentUserId)
+                .collection("sharedRecipes").document("received")
+                .collection("received")
+            
+            let snapshot = try await receivedRef.order(by: "timestamp", descending: true).getDocuments()
+            
+            let recipes = snapshot.documents.compactMap { doc in
+                let data = doc.data()
+                let id = doc.documentID
+                let fromUserId = data["fromUserId"] as? String ?? ""
+                let recipeId = data["recipeId"] as? Int ?? 0
+                let reaction = data["reaction"] as? String
+                let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+                
+                return ReceivedSharedRecipe(
+                    id: id,
+                    fromUserId: fromUserId,
+                    recipeId: recipeId,
+                    reaction: reaction,
+                    timestamp: timestamp
+                )
+            }
+            
             receivedRecipes = recipes
         } catch {
-            errorMessage = "Bana gönderilen tarifler yüklenemedi."
+            errorMessage = "Alınan tarifler yüklenemedi: \(error.localizedDescription)"
         }
+        
         isLoading = false
+    }
+    
+    // Yeni tarif bildirimini temizle (deprecated)
+    func clearNewRecipeAlert() {
+        newRecipeReceived = false
     }
     
     // Benim gönderdiğim tarifleri çek

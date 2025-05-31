@@ -5,6 +5,7 @@ import FirebaseCore
 struct ContentView: View {
     // MARK: - Properties
     @EnvironmentObject private var router: Router
+    @StateObject private var notificationService = NotificationService.shared
     
     // MARK: - Body
     var body: some View {
@@ -50,6 +51,10 @@ struct ContentView: View {
             }
         }
         .edgesIgnoringSafeArea(.bottom) // Alt güvenli alanı yoksay
+        .onAppear {
+            // Global notification service'i başlat
+            notificationService.setRouter(router)
+        }
     }
 }
 
@@ -57,6 +62,7 @@ struct ContentView: View {
 struct CustomTabBar: View {
     // MARK: - Properties
     @EnvironmentObject private var router: Router
+    @ObservedObject private var notificationService = NotificationService.shared
     
     // MARK: - Body
     var body: some View {
@@ -66,6 +72,7 @@ struct CustomTabBar: View {
                     icon: "house.fill",
                     title: "Home",
                     isSelected: router.currentRoute == .home,
+                    hasNotification: false,
                     action: { router.navigate(to: .home) }
                 )
                 .frame(maxWidth: .infinity)
@@ -73,6 +80,7 @@ struct CustomTabBar: View {
                     icon: "magnifyingglass",
                     title: "Search",
                     isSelected: router.currentRoute == .recipes,
+                    hasNotification: false,
                     action: { router.navigate(to: .recipes) }
                 )
                 .frame(maxWidth: .infinity)
@@ -81,13 +89,19 @@ struct CustomTabBar: View {
                     icon: "person.2.fill",
                     title: "Shared",
                     isSelected: router.currentRoute == .sharedRecipes,
-                    action: { router.navigate(to: .sharedRecipes) }
+                    hasNotification: notificationService.hasNewSharedRecipe,
+                    action: { 
+                        router.navigate(to: .sharedRecipes)
+                        // Shared sayfasına gidince bildirimi temizle
+                        notificationService.clearNotification()
+                    }
                 )
                 .frame(maxWidth: .infinity)
                 tabBarButton(
                     icon: "person",
                     title: "Profile",
                     isSelected: router.currentRoute == .profile,
+                    hasNotification: false,
                     action: { router.navigate(to: .profile) }
                 )
                 .frame(maxWidth: .infinity)
@@ -115,15 +129,31 @@ struct CustomTabBar: View {
 
     // Tab bar butonunu oluşturan yardımcı fonksiyon
     @ViewBuilder
-    private func tabBarButton(icon: String, title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func tabBarButton(icon: String, title: String, isSelected: Bool, hasNotification: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
+            ZStack {
+                VStack(spacing: 5) {
+                    Image(systemName: icon)
+                        .font(.title2)
+                        .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
+                    Text(title)
+                        .font(.caption)
+                        .foregroundColor(isSelected ? AppColors.accent : AppColors.primary)
+                }
+                
+                // Bildirim badge'i
+                if hasNotification {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Circle()
+                                .fill(AppColors.accent)
+                                .frame(width: 12, height: 12)
+                                .offset(x: -8, y: -2)
+                        }
+                        Spacer()
+                    }
+                }
             }
         }
     }

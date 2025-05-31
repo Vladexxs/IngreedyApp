@@ -29,6 +29,7 @@ enum Route {
 class Router: ObservableObject {
     // MARK: - Properties
     @Published var currentRoute: Route = .login
+    @Published var hasNewSharedRecipeNotification: Bool = false
     private var authStateListener: AuthStateDidChangeListenerHandle?
     
     // MARK: - Initialization
@@ -58,6 +59,12 @@ class Router: ObservableObject {
             print("User is not logged in, navigating to Login")
             self.currentRoute = .login
         }
+    }
+    
+    /// Yeni paylaşılan tarif bildirimini ayarlar
+    /// - Parameter hasNotification: Bildirim durumu
+    func setNewSharedRecipeNotification(_ hasNotification: Bool) {
+        hasNewSharedRecipeNotification = hasNotification
     }
     
     // MARK: - Private Methods
