@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct LoadingView: View {
+struct IngreedyLoadingView: View {
     var body: some View {
         ZStack {
             Color.black.opacity(AppConstants.Opacity.background)

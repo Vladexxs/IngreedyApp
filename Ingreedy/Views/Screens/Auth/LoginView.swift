@@ -75,11 +75,11 @@ struct LoginView: View {
             .padding(.horizontal, AppConstants.Spacing.extraLarge)
             
             if viewModel.isLoading {
-                LoadingView()
+                IngreedyLoadingView()
             }
             
             if let error = viewModel.error {
-                ErrorView(
+                IngreedyErrorView(
                     error: error,
                     retryAction: nil,
                     dismissAction: {

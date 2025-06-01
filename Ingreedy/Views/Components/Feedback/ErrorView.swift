@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ErrorView: View {
+struct IngreedyErrorView: View {
     let error: Error
     let retryAction: (() -> Void)?
     let dismissAction: () -> Void
@@ -43,7 +43,7 @@ struct ErrorView: View {
 }
 
 #Preview {
-    ErrorView(
+    IngreedyErrorView(
         error: NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid email or password"]),
         retryAction: nil,
         dismissAction: {}

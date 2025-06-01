@@ -57,7 +57,7 @@ struct ForgotPasswordView: View {
             })
             
             if let error = viewModel.error {
-                ErrorView(
+                IngreedyErrorView(
                     error: error,
                     retryAction: nil,
                     dismissAction: {

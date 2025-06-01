@@ -38,10 +38,10 @@ struct ProfileView: View {
                 }
                 // Yükleniyor ve hata göstergeleri...
                 if viewModel.isLoading {
-                    LoadingView()
+                    IngreedyLoadingView()
                 }
                 if let error = viewModel.error {
-                    ErrorView(
+                    IngreedyErrorView(
                         error: error,
                         retryAction: nil,
                         dismissAction: { viewModel.error = nil }
