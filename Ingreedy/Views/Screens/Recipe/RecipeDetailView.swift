@@ -178,7 +178,7 @@ struct RecipeDetailView: View {
         }
         .edgesIgnoringSafeArea(.all)
         .sheet(isPresented: $showShareSheet) {
-            UserSelectionSheet(recipeId: recipe.id)
+            EnhancedUserSelectionSheet(recipeId: recipe.id)
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {

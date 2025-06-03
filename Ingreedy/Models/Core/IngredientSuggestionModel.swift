@@ -100,29 +100,4 @@ extension IngredientCategory {
             )
         ].filter { $0.isNotEmpty }
     }
-}
-
-// MARK: - Ingredient Emoji Helper
-struct IngredientEmojiHelper {
-    static func getEmoji(for ingredient: String) -> String {
-        let lowercased = ingredient.lowercased()
-        
-        if lowercased.contains("chicken") || lowercased.contains("tavuk") { return "🐔" }
-        if lowercased.contains("beef") || lowercased.contains("et") { return "🥩" }
-        if lowercased.contains("fish") || lowercased.contains("balık") { return "🐟" }
-        if lowercased.contains("tomato") || lowercased.contains("domates") { return "🍅" }
-        if lowercased.contains("onion") || lowercased.contains("soğan") { return "🧅" }
-        if lowercased.contains("carrot") || lowercased.contains("havuç") { return "🥕" }
-        if lowercased.contains("potato") || lowercased.contains("patates") { return "🥔" }
-        if lowercased.contains("cheese") || lowercased.contains("peynir") { return "🧀" }
-        if lowercased.contains("milk") || lowercased.contains("süt") { return "🥛" }
-        if lowercased.contains("egg") || lowercased.contains("yumurta") { return "🥚" }
-        if lowercased.contains("rice") || lowercased.contains("pirinç") { return "🍚" }
-        if lowercased.contains("pasta") { return "🍝" }
-        if lowercased.contains("bread") || lowercased.contains("ekmek") { return "🍞" }
-        if lowercased.contains("garlic") || lowercased.contains("sarımsak") { return "🧄" }
-        if lowercased.contains("pepper") || lowercased.contains("biber") { return "🌶️" }
-        
-        return "🥄"
-    }
 } 

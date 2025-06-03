@@ -6,12 +6,14 @@ import Kingfisher
 struct SharedRecipesView: View {
     @EnvironmentObject private var router: Router
     @StateObject private var viewModel: SharedRecipesViewModel
+    @StateObject private var friendViewModel = FriendViewModel()
     @ObservedObject private var notificationService = NotificationService.shared
     @State private var selectedTab = 0
     @State private var selectedRecipe: Recipe? = nil
     @State private var selectedRecipeForEmoji: ReceivedSharedRecipe? = nil
     @State private var flyingEmoji: String? = nil
     @State private var flyingEmojiPosition: CGPoint = .zero
+    @State private var showFriendsView = false
 
     let segmentTitles = ["Received", "Sent"]
     
@@ -49,6 +51,10 @@ struct SharedRecipesView: View {
                 navigationLink
             }
         }
+        .sheet(isPresented: $showFriendsView) {
+            FriendsView()
+                .environmentObject(friendViewModel)
+        }
     }
     
     // MARK: - View Components
@@ -82,7 +88,32 @@ struct SharedRecipesView: View {
                     }
                 }
             }
+            
             Spacer()
+            
+            // Friends Button
+            Button(action: { 
+                showFriendsView.toggle() 
+            }) {
+                ZStack {
+                    Image(systemName: "person.2.fill")
+                        .font(.title2)
+                        .foregroundColor(AppColors.primary)
+                    
+                    // Notification badge for friend requests
+                    if !friendViewModel.incomingRequests.isEmpty {
+                        Circle()
+                            .fill(.red)
+                            .frame(width: 12, height: 12)
+                            .overlay(
+                                Text("\(friendViewModel.incomingRequests.count)")
+                                    .font(.caption2.bold())
+                                    .foregroundColor(.white)
+                            )
+                            .offset(x: 12, y: -12)
+                    }
+                }
+            }
         }
         .padding(.top, 32)
         .padding(.horizontal, 24)
