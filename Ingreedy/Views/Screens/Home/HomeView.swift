@@ -21,7 +21,7 @@ struct HomeView: View {
                                 Text("\(viewModel.greetingText)")
                                     .font(.system(size: 16, weight: .medium))
                                     .foregroundColor(AppColors.primary)
-                                Text(viewModel.homeModel?.user.fullName ?? "")
+                                Text(viewModel.userName)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(AppColors.text)
                             }
@@ -93,17 +93,12 @@ struct HomeView: View {
                         .padding(.bottom, 8)
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
                             ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
-                                let isFavorite = viewModel.userFavorites.contains(recipe.id)
                                 NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
                                     PopularRecipeCard(
                                         recipe: recipe,
-                                        isFavorite: isFavorite,
+                                        isFavorite: viewModel.isRecipeFavorite(recipe.id),
                                         onFavoriteToggle: {
-                                            if isFavorite {
-                                                viewModel.removeRecipeFromFavorites(recipeId: recipe.id)
-                                            } else {
-                                                viewModel.addRecipeToFavorites(recipeId: recipe.id)
-                                            }
+                                            viewModel.toggleFavorite(for: recipe.id)
                                         }
                                     )
                                 }

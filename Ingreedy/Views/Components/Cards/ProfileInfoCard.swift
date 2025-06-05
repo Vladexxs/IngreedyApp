@@ -29,9 +29,6 @@ struct ProfileInfoCard: View {
                     .resizable()
                     .clipShape(Circle())
                     .frame(width: 56, height: 56)
-                    .onAppear {
-                        print("ProfileInfoCard KFImage için Clean URL: \(cleanUrl.absoluteString)")
-                    }
             } else {
                 defaultUserImagePlaceholder
             }

@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 class FriendViewModel: ObservableObject {
@@ -16,10 +17,51 @@ class FriendViewModel: ObservableObject {
     private let friendService = FriendService()
     private var cancellables = Set<AnyCancellable>()
     
+    // Real-time listeners
+    private var incomingRequestsListener: ListenerRegistration?
+    private var outgoingRequestsListener: ListenerRegistration?
+    
     init() {
+        setupRealTimeListeners()
         loadFriends()
-        loadIncomingRequests()
-        loadOutgoingRequests()
+    }
+    
+    deinit {
+        // Clean up listeners
+        incomingRequestsListener?.remove()
+        outgoingRequestsListener?.remove()
+        print("🧹 FriendViewModel: Cleaned up real-time listeners")
+    }
+    
+    // MARK: - Setup Real-time Listeners
+    private func setupRealTimeListeners() {
+        print("🔄 FriendViewModel: Setting up real-time listeners")
+        
+        // Listen to incoming requests
+        incomingRequestsListener = friendService.listenToIncomingFriendRequests { [weak self] requests in
+            DispatchQueue.main.async {
+                print("✅ FriendViewModel: Received \(requests.count) incoming requests via listener")
+                self?.incomingRequests = requests
+            }
+        }
+        
+        // Listen to outgoing requests
+        outgoingRequestsListener = friendService.listenToOutgoingFriendRequests { [weak self] requests in
+            DispatchQueue.main.async {
+                print("✅ FriendViewModel: Received \(requests.count) outgoing requests via listener")
+                self?.outgoingRequests = requests
+            }
+        }
+        
+        print("✅ FriendViewModel: Real-time listeners setup completed")
+    }
+    
+    // MARK: - Restart Listeners (when user changes)
+    func restartListeners() {
+        print("🔄 FriendViewModel: Restarting real-time listeners")
+        incomingRequestsListener?.remove()
+        outgoingRequestsListener?.remove()
+        setupRealTimeListeners()
     }
     
     // MARK: - Load Data
@@ -38,26 +80,16 @@ class FriendViewModel: ObservableObject {
         }
     }
     
+    // These methods are now handled by real-time listeners
+    // Keep them for backward compatibility but they don't need to do anything
     func loadIncomingRequests() {
-        Task {
-            do {
-                let requests = try await friendService.fetchIncomingFriendRequests()
-                self.incomingRequests = requests
-            } catch {
-                print("❌ Failed to load friend requests: \(error.localizedDescription)")
-            }
-        }
+        // Real-time listener handles this automatically
+        print("📡 FriendViewModel: Incoming requests are handled by real-time listener")
     }
     
     func loadOutgoingRequests() {
-        Task {
-            do {
-                let requests = try await friendService.fetchOutgoingFriendRequests()
-                self.outgoingRequests = requests
-            } catch {
-                print("❌ Failed to load outgoing friend requests: \(error.localizedDescription)")
-            }
-        }
+        // Real-time listener handles this automatically
+        print("📡 FriendViewModel: Outgoing requests are handled by real-time listener")
     }
     
     // MARK: - Send Friend Request
@@ -80,6 +112,7 @@ class FriendViewModel: ObservableObject {
                     self.successMessage = "Friend request sent to @\(cleanUsername)!"
                     self.friendUsername = ""
                     self.showAddFriendAlert = false
+                    // No need to manually refresh - real-time listener will update UI
                 }
             } catch {
                 self.errorMessage = error.localizedDescription
@@ -94,10 +127,8 @@ class FriendViewModel: ObservableObject {
             do {
                 try await friendService.acceptFriendRequest(request.id)
                 
-                // Remove from pending requests
-                incomingRequests.removeAll { $0.id == request.id }
-                
-                // Reload friends list
+                // Real-time listener will automatically remove from pending requests
+                // Reload friends list to show the new friend
                 loadFriends()
                 
                 successMessage = "Friend request accepted!"
@@ -113,9 +144,7 @@ class FriendViewModel: ObservableObject {
             do {
                 try await friendService.rejectFriendRequest(request.id)
                 
-                // Remove from pending requests
-                incomingRequests.removeAll { $0.id == request.id }
-                
+                // Real-time listener will automatically remove from pending requests
                 successMessage = "Friend request rejected"
             } catch {
                 errorMessage = "Failed to reject friend request: \(error.localizedDescription)"
@@ -147,9 +176,9 @@ class FriendViewModel: ObservableObject {
     
     // MARK: - Refresh All Data
     func refreshData() {
+        // Only refresh friends - real-time listeners handle requests automatically
         loadFriends()
-        loadIncomingRequests()
-        loadOutgoingRequests()
+        print("🔄 FriendViewModel: Refreshed friends list - requests handled by real-time listeners")
     }
     
     // MARK: - Cancel Friend Request
@@ -157,7 +186,7 @@ class FriendViewModel: ObservableObject {
         Task {
             do {
                 try await friendService.cancelFriendRequest(requestId)
-                loadOutgoingRequests() // Refresh outgoing requests
+                // Real-time listener will automatically remove from outgoing requests
                 successMessage = "Friend request cancelled successfully"
             } catch {
                 errorMessage = error.localizedDescription
@@ -177,7 +206,6 @@ class FriendViewModel: ObservableObject {
             toUserName: "Current User",
             toUserUsername: "currentuser",
             fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date()
         )
@@ -191,7 +219,6 @@ class FriendViewModel: ObservableObject {
             toUserName: "Current User",
             toUserUsername: "currentuser",
             fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date().addingTimeInterval(-3600) // 1 hour ago
         )
@@ -206,7 +233,6 @@ class FriendViewModel: ObservableObject {
             toUserName: "Mehmet Özkan",
             toUserUsername: "mehmetozkan",
             fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date().addingTimeInterval(-1800) // 30 minutes ago
         )

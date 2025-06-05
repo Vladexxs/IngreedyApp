@@ -70,7 +70,6 @@ struct SharedRecipesView: View {
                 if notificationService.hasNewSharedRecipe {
                     Button(action: {
                         notificationService.clearNotification()
-                        viewModel.clearNewRecipeAlert()
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "bell.fill")
@@ -187,7 +186,7 @@ struct SharedRecipesView: View {
                                 recipe: recipe,
                                 user: viewModel.userCache[recipe.fromUserId],
                                 recipeDetail: viewModel.recipeCache[recipe.recipeId],
-                                reaction: recipe.reaction,
+                                reaction: reactionTypeToString(recipe.reaction),
                                 onTap: {
                                     if let detail = viewModel.recipeCache[recipe.recipeId] {
                                         selectedRecipe = detail
@@ -273,7 +272,7 @@ struct SharedRecipesView: View {
                         recipe: selectedEmojiRecipe,
                         user: viewModel.userCache[selectedEmojiRecipe.fromUserId],
                         recipeDetail: viewModel.recipeCache[selectedEmojiRecipe.recipeId],
-                        reaction: selectedEmojiRecipe.reaction,
+                        reaction: reactionTypeToString(selectedEmojiRecipe.reaction),
                         onTap: {},
                         onLongPress: {},
                         showEmojiMenu: false,
@@ -323,6 +322,10 @@ struct SharedRecipesView: View {
     }
     
     // MARK: - Helper Methods
+    
+    private func reactionTypeToString(_ reaction: ReactionType?) -> String? {
+        return reaction?.rawValue
+    }
     
     private func setupViewModel() {
         viewModel.router = router

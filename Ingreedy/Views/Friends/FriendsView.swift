@@ -312,7 +312,7 @@ struct OutgoingFriendRequestCard: View {
     var body: some View {
         HStack(spacing: 16) {
             // Profile Image
-            if let url = request.fromUserProfileImageUrl, !url.isEmpty {
+            if let url = request.toUserProfileImageUrl, !url.isEmpty {
                 KFImage(URL(string: url))
                     .resizable()
                     .scaledToFill()
@@ -327,7 +327,7 @@ struct OutgoingFriendRequestCard: View {
                     .fill(AppColors.primary.opacity(0.2))
                     .frame(width: 50, height: 50)
                     .overlay(
-                        Text(request.fromUserName.prefix(1))
+                        Text(request.toUserName.prefix(1))
                             .font(.headline.bold())
                             .foregroundColor(AppColors.primary)
                     )

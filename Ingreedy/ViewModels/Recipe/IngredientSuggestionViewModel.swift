@@ -1,28 +1,9 @@
 import Foundation
 import Combine
 
-// MARK: - Ingredient Suggestion ViewModel Protocol
-protocol IngredientSuggestionViewModelProtocol: ObservableObject {
-    var userIngredients: [String] { get }
-    var suggestedRecipes: [Recipe] { get }
-    var partialMatchRecipes: [PartialMatchResult] { get }
-    var searchText: String { get set }
-    var ingredientSuggestions: [String] { get }
-    var allIngredients: Set<String> { get }
-    var dynamicCategories: [IngredientCategory] { get }
-    var isLoading: Bool { get }
-    var error: Error? { get }
-    
-    func addIngredient(_ ingredient: String)
-    func removeIngredient(_ ingredient: String)
-    func suggestRecipes()
-    func clearIngredients()
-    func fetchAllIngredients()
-}
-
 // MARK: - Ingredient Suggestion ViewModel Implementation
 @MainActor
-final class IngredientSuggestionViewModel: BaseViewModel, IngredientSuggestionViewModelProtocol {
+final class IngredientSuggestionViewModel: BaseViewModel {
     
     // MARK: - Published Properties
     @Published var userIngredients: [String] = []

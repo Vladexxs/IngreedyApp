@@ -116,11 +116,12 @@ struct FriendRequestCard: View {
             toUserName: "Jane Smith",
             toUserUsername: "janesmith",
             fromUserProfileImageUrl: nil,
+            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date()
         )
     ) { action in
-        print("Action: \(action)")
+        // Handle action
     }
     .padding()
 } 

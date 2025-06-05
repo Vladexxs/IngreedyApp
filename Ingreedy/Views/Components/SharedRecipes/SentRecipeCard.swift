@@ -98,7 +98,7 @@ struct SentRecipeCard: View {
                 
                 // Emoji overlay
                 if let reaction = recipe.reaction {
-                    emojiOverlay(for: reaction, offsetX: 18, offsetY: 18)
+                    emojiOverlay(for: reactionTypeToString(reaction), offsetX: 18, offsetY: 18)
                 }
             }
             .frame(height: 90)
@@ -107,6 +107,11 @@ struct SentRecipeCard: View {
         .padding(.horizontal, 2)
         .padding(.trailing, 24)
         .onTapGesture(perform: onTap)  // onTap gesture'ını ekliyoruz
+    }
+    
+    // MARK: - Helper Methods
+    private func reactionTypeToString(_ reaction: ReactionType?) -> String? {
+        return reaction?.rawValue
     }
     
     func emojiText(for reaction: String) -> String {
@@ -119,15 +124,17 @@ struct SentRecipeCard: View {
     }
 
     @ViewBuilder
-    private func emojiOverlay(for reaction: String, offsetX: CGFloat, offsetY: CGFloat) -> some View {
-        Text(emojiText(for: reaction))
-            .font(.system(size: 20))
-            .padding(6)
-            .background(.ultraThinMaterial)
-            .clipShape(Circle())
-            .shadow(color: Color.black.opacity(0.15), radius: 4, y: 1)
-            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-            .offset(x: offsetX, y: offsetY)
-            .zIndex(2)
+    private func emojiOverlay(for reaction: String?, offsetX: CGFloat, offsetY: CGFloat) -> some View {
+        if let reaction = reaction {
+            Text(emojiText(for: reaction))
+                .font(.system(size: 20))
+                .padding(6)
+                .background(.ultraThinMaterial)
+                .clipShape(Circle())
+                .shadow(color: Color.black.opacity(0.15), radius: 4, y: 1)
+                .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                .offset(x: offsetX, y: offsetY)
+                .zIndex(2)
+        }
     }
 } 

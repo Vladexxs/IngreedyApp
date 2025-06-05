@@ -8,13 +8,19 @@ import FirebaseCore
 class LoginViewModel: BaseViewModel {
     @Published var loginModel: LoginModel = LoginModel(email: "", password: "")
     @Published var isLoggedIn: Bool = false
+    @Published var loginSuccess: Bool = false
+    
     private let authService: AuthenticationServiceProtocol
     
     init(authService: AuthenticationServiceProtocol = FirebaseAuthenticationService.shared) {
         self.authService = authService
+        super.init()
     }
     
     func login() {
+        // Validate fields first
+        guard validateFields() else { return }
+        
         Task {
             do {
                 isLoading = true
@@ -27,12 +33,34 @@ class LoginViewModel: BaseViewModel {
                 
                 isLoading = false
                 isLoggedIn = true
+                loginSuccess = true
             } catch {
                 isLoading = false
                 isLoggedIn = false
                 handleError(error)
             }
         }
+    }
+    
+    private func validateFields() -> Bool {
+        clearError()
+        
+        guard !loginModel.email.isEmpty else {
+            handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter your email address"]))
+            return false
+        }
+        
+        guard !loginModel.password.isEmpty else {
+            handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter your password"]))
+            return false
+        }
+        
+        guard loginModel.isEmailValid else {
+            handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter a valid email address"]))
+            return false
+        }
+        
+        return true
     }
     
     func signInWithGoogle(presentingViewController: UIViewController) async {
@@ -69,6 +97,7 @@ class LoginViewModel: BaseViewModel {
             
             isLoading = false
             isLoggedIn = true
+            loginSuccess = true
         } catch {
             isLoading = false
             isLoggedIn = false
@@ -77,6 +106,16 @@ class LoginViewModel: BaseViewModel {
     }
     
     func resetPassword(email: String) async {
+        guard !email.isEmpty else {
+            handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter your email address"]))
+            return
+        }
+        
+        guard email.contains("@") && email.contains(".") else {
+            handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please enter a valid email address"]))
+            return
+        }
+        
         do {
             isLoading = true
             error = nil
@@ -86,5 +125,17 @@ class LoginViewModel: BaseViewModel {
             isLoading = false
             handleError(error)
         }
+    }
+    
+    // MARK: - Field Validation Helpers
+    
+    var emailErrorMessage: String? {
+        guard !loginModel.email.isEmpty else { return nil }
+        return loginModel.isEmailValid ? nil : "Please enter a valid email address"
+    }
+    
+    var passwordErrorMessage: String? {
+        guard !loginModel.password.isEmpty else { return nil }
+        return loginModel.password.count >= 6 ? nil : "Password must be at least 6 characters"
     }
 }

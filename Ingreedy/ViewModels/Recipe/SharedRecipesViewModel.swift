@@ -11,7 +11,6 @@ class SharedRecipesViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var userCache: [String: User] = [:] // userId -> User
     @Published var recipeCache: [Int: Recipe] = [:] // recipeId -> Recipe
-    @Published var newRecipeReceived: Bool = false // Deprecated - use global NotificationService
     
     private let service = SharedRecipeService()
     private let customSession: URLSession
@@ -29,6 +28,13 @@ class SharedRecipesViewModel: ObservableObject {
         self.customSession = URLSession(configuration: config)
     }
     
+    // MARK: - Helper Methods
+    private func stringToReactionType(_ reactionString: String?) -> ReactionType? {
+        guard let reactionString = reactionString else { return nil }
+        return ReactionType(rawValue: reactionString)
+    }
+    
+    // MARK: - Public Methods
     // Bana gönderilen tarifleri çek (tek seferlik fetch)
     func loadReceivedRecipes() async {
         guard let currentUserId = Auth.auth().currentUser?.uid else { return }
@@ -48,14 +54,15 @@ class SharedRecipesViewModel: ObservableObject {
                 let id = doc.documentID
                 let fromUserId = data["fromUserId"] as? String ?? ""
                 let recipeId = data["recipeId"] as? Int ?? 0
-                let reaction = data["reaction"] as? String
+                let reactionString = data["reaction"] as? String
                 let timestamp = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
                 
                 return ReceivedSharedRecipe(
                     id: id,
                     fromUserId: fromUserId,
+                    fromUserName: nil,
                     recipeId: recipeId,
-                    reaction: reaction,
+                    reaction: stringToReactionType(reactionString),
                     timestamp: timestamp
                 )
             }
@@ -66,11 +73,6 @@ class SharedRecipesViewModel: ObservableObject {
         }
         
         isLoading = false
-    }
-    
-    // Yeni tarif bildirimini temizle (deprecated)
-    func clearNewRecipeAlert() {
-        newRecipeReceived = false
     }
     
     // Benim gönderdiğim tarifleri çek
@@ -90,8 +92,8 @@ class SharedRecipesViewModel: ObservableObject {
         isLoading = false
     }
     
-    // Gelen tarife emoji tepkisi ver
-    func reactToRecipe(receivedRecipeId: String, reaction: String) async {
+    // Gelen tarife enum tepkisi ver
+    func reactToRecipe(receivedRecipeId: String, reaction: ReactionType) async {
         do {
             try await service.reactToRecipe(receivedRecipeId: receivedRecipeId, reaction: reaction)
             // Local güncelleme
@@ -101,6 +103,15 @@ class SharedRecipesViewModel: ObservableObject {
         } catch {
             errorMessage = "Tepki gönderilemedi."
         }
+    }
+    
+    // Gelen tarife string tepkisi ver (backward compatibility)
+    func reactToRecipe(receivedRecipeId: String, reaction: String) async {
+        guard let reactionType = ReactionType(rawValue: reaction) else {
+            errorMessage = "Geçersiz tepki türü: \(reaction)"
+            return
+        }
+        await reactToRecipe(receivedRecipeId: receivedRecipeId, reaction: reactionType)
     }
     
     // Tarif gönderme (isteğe bağlı, UI'de kullanmak istersem)
@@ -142,6 +153,7 @@ class SharedRecipesViewModel: ObservableObject {
                 id: userId,
                 email: data["email"] as? String ?? "",
                 fullName: data["fullName"] as? String ?? "",
+                username: data["username"] as? String,
                 favorites: data["favorites"] as? [Int] ?? [],
                 friends: [],
                 profileImageUrl: finalProfileImageUrl,
