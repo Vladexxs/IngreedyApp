@@ -71,17 +71,6 @@ struct FriendsView: View {
             
             Spacer()
             
-            // Debug button for testing (remove in production)
-            #if DEBUG
-            Button(action: {
-                friendViewModel.loadTestData()
-            }) {
-                Image(systemName: "ladybug")
-                    .font(.title3)
-                    .foregroundColor(.purple)
-            }
-            #endif
-            
             Button(action: {
                 showAddFriendSheet = true
             }) {
@@ -388,7 +377,6 @@ struct OutgoingFriendRequestCard: View {
 
 #Preview {
     let testViewModel = FriendViewModel()
-    testViewModel.loadTestData()
     
     return FriendsView()
         .environmentObject(testViewModel)

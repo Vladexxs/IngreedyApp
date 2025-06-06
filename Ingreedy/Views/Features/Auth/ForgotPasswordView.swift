@@ -7,15 +7,8 @@ struct ForgotPasswordView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    AppColors.background,
-                    AppColors.card.opacity(0.3)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            AppColors.background
+                .ignoresSafeArea()
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 32) {

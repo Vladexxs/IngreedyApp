@@ -31,11 +31,25 @@
 		C9037CDB2DBED91700DD5B58 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDA2DBED91700DD5B58 /* FirebaseStorage */; };
 		C9037CDD2DBED91700DD5B58 /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDC2DBED91700DD5B58 /* FirebaseStorageCombine-Community */; };
 		C9037CDF2DBED91700DD5B58 /* FirebaseVertexAI in Frameworks */ = {isa = PBXBuildFile; productRef = C9037CDE2DBED91700DD5B58 /* FirebaseVertexAI */; };
+		C928C55B2DF3AD5E0028D281 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = C928C55A2DF3AD5E0028D281 /* Lottie */; };
 		C942DEA72DC12C2F008E551C /* rules.md in Resources */ = {isa = PBXBuildFile; fileRef = C942DEA62DC12C2F008E551C /* rules.md */; };
 		C967F3372DCFB500009B9E7E /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = C967F3362DCFB500009B9E7E /* GoogleSignIn */; };
 		C967F3392DCFB500009B9E7E /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C967F3382DCFB500009B9E7E /* GoogleSignInSwift */; };
 		C9991DB12DE1E68200515703 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = C9991DB02DE1E68200515703 /* Kingfisher */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C9794C8D2DF3AB9500D0E922 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		C942DEA62DC12C2F008E551C /* rules.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = rules.md; sourceTree = "<group>"; };
@@ -83,6 +97,7 @@
 				C9037CC72DBED91700DD5B58 /* FirebaseFirestore in Frameworks */,
 				C9037CD52DBED91700DD5B58 /* FirebaseMessaging in Frameworks */,
 				C9037CD12DBED91700DD5B58 /* FirebaseInstallations in Frameworks */,
+				C928C55B2DF3AD5E0028D281 /* Lottie in Frameworks */,
 				C9037CCD2DBED91700DD5B58 /* FirebaseFunctionsCombine-Community in Frameworks */,
 				C967F3372DCFB500009B9E7E /* GoogleSignIn in Frameworks */,
 				C9037CBD2DBED91700DD5B58 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */,
@@ -136,6 +151,7 @@
 				C9EA9E672DAEA6530044FDE0 /* Sources */,
 				C9EA9E682DAEA6530044FDE0 /* Frameworks */,
 				C9EA9E692DAEA6530044FDE0 /* Resources */,
+				C9794C8D2DF3AB9500D0E922 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -173,6 +189,7 @@
 				C967F3362DCFB500009B9E7E /* GoogleSignIn */,
 				C967F3382DCFB500009B9E7E /* GoogleSignInSwift */,
 				C9991DB02DE1E68200515703 /* Kingfisher */,
+				C928C55A2DF3AD5E0028D281 /* Lottie */,
 			);
 			productName = Ingreedy;
 			productReference = C9EA9E6B2DAEA6530044FDE0 /* Ingreedy.app */;
@@ -206,6 +223,7 @@
 				C9EA9E792DAEA6DE0044FDE0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				C967F3352DCFB500009B9E7E /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				C9991DAF2DE1E68200515703 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				C928C5592DF3AD5E0028D281 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C9EA9E6C2DAEA6530044FDE0 /* Products */;
@@ -442,6 +460,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		C928C5592DF3AD5E0028D281 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.2;
+			};
+		};
 		C967F3352DCFB500009B9E7E /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -570,6 +596,11 @@
 		C9037CDE2DBED91700DD5B58 /* FirebaseVertexAI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FirebaseVertexAI;
+		};
+		C928C55A2DF3AD5E0028D281 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C928C5592DF3AD5E0028D281 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
 		};
 		C967F3362DCFB500009B9E7E /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;

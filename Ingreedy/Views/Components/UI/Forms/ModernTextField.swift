@@ -61,19 +61,39 @@ struct ModernTextField: View {
                         // Text Input
                         HStack {
                             if isSecure && !isPasswordVisible {
-                                SecureField(floatingTitle ? "" : placeholder, text: $text)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .keyboardType(keyboardType)
-                                    .textContentType(textContentType)
-                                    .foregroundColor(AppColors.text)
+                                ZStack(alignment: .leading) {
+                                    // Custom placeholder
+                                    if text.isEmpty && !floatingTitle {
+                                        Text(placeholder)
+                                            .foregroundColor(AppColors.secondary.opacity(0.7))
+                                            .font(.body)
+                                    }
+                                    
+                                    SecureField("", text: $text)
+                                        .textFieldStyle(PlainTextFieldStyle())
+                                        .keyboardType(keyboardType)
+                                        .textContentType(textContentType)
+                                        .foregroundColor(AppColors.text)
+                                        .accentColor(AppColors.accent)
+                                }
                             } else {
-                                TextField(floatingTitle ? "" : placeholder, text: $text)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .keyboardType(keyboardType)
-                                    .textContentType(textContentType)
-                                    .autocapitalization(shouldDisableCapitalization ? .none : .words)
-                                    .autocorrectionDisabled(shouldDisableCorrection)
-                                    .foregroundColor(AppColors.text)
+                                ZStack(alignment: .leading) {
+                                    // Custom placeholder
+                                    if text.isEmpty && !floatingTitle {
+                                        Text(placeholder)
+                                            .foregroundColor(AppColors.secondary.opacity(0.7))
+                                            .font(.body)
+                                    }
+                                    
+                                    TextField("", text: $text)
+                                        .textFieldStyle(PlainTextFieldStyle())
+                                        .keyboardType(keyboardType)
+                                        .textContentType(textContentType)
+                                        .autocapitalization(shouldDisableCapitalization ? .none : .words)
+                                        .autocorrectionDisabled(shouldDisableCorrection)
+                                        .foregroundColor(AppColors.text)
+                                        .accentColor(AppColors.accent)
+                                }
                             }
                             
                             // Password visibility toggle

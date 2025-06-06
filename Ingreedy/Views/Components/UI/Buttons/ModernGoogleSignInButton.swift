@@ -23,10 +23,11 @@ struct ModernGoogleSignInButton: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: AppColors.text))
                         .scaleEffect(0.8)
                 } else {
-                    // Google Icon
-                    Image(systemName: "globe")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(AppColors.text)
+                    // Gmail Icon
+                    Image("gmail-icon")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 20, height: 20)
                 }
                 
                 Text(isLoading ? "Signing in..." : "Continue with Google")
