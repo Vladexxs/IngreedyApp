@@ -31,7 +31,14 @@ struct LoginView: View {
         }
         .onChange(of: viewModel.loginSuccess) { success in
             if success {
+                print("🏠 [LoginView] loginSuccess changed to true, navigating to home")
                 router.navigate(to: .home)
+            }
+        }
+        .onChange(of: viewModel.needsUsernameSetup) { needsSetup in
+            if needsSetup {
+                print("🔧 [LoginView] needsUsernameSetup changed to true, navigating to setupUsername")
+                router.navigate(to: .setupUsername)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.error != nil)
@@ -42,8 +49,54 @@ struct LoginView: View {
 private extension LoginView {
     
     var backgroundView: some View {
-        AppColors.background
+        ZStack {
+            // Ana beyaz arka plan
+            AppColors.background
+                .ignoresSafeArea()
+            
+            // Dalgalı turuncu arka plan (sadece üst kısım)
+            VStack {
+                // Basit dalga efekti
+                ZStack {
+                    // Ana gradient
+                    LinearGradient(
+                        colors: [
+                            Color.orange.opacity(0.8),
+                            Color.orange.opacity(0.3),
+                            Color.white
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    
+                    // Dalga efekti
+                    GeometryReader { geometry in
+                        Path { path in
+                            let width = geometry.size.width
+                            let height = geometry.size.height
+                            let waveHeight: CGFloat = 30
+                            
+                            path.move(to: CGPoint(x: 0, y: height * 0.7))
+                            
+                            for x in stride(from: 0, through: width, by: 2) {
+                                let relativeX = x / width
+                                let y = height * 0.7 + waveHeight * sin(relativeX * .pi * 3)
+                                path.addLine(to: CGPoint(x: x, y: y))
+                            }
+                            
+                            path.addLine(to: CGPoint(x: width, y: height))
+                            path.addLine(to: CGPoint(x: 0, y: height))
+                            path.closeSubpath()
+                        }
+                        .fill(Color.white)
+                    }
+                }
+                .frame(height: UIScreen.main.bounds.height * 0.45)
+                
+                Spacer()
+            }
             .ignoresSafeArea()
+        }
     }
     
     var mainContentView: some View {
@@ -61,6 +114,7 @@ private extension LoginView {
             Spacer(minLength: LayoutConstants.bottomSpacing)
         }
         .padding(.horizontal, LayoutConstants.horizontalPadding)
+        .padding(.top, 50)
     }
     
     var loginFormView: some View {
@@ -155,13 +209,13 @@ private extension LoginView {
     var googleSignInButton: some View {
         ModernGoogleSignInButton(
             action: {
-                if let rootVC = UIApplication.shared.connectedScenes
-                    .compactMap({ $0 as? UIWindowScene })
-                    .flatMap({ $0.windows })
-                    .first(where: { $0.isKeyWindow })?.rootViewController {
-                    Task {
-                        await viewModel.signInWithGoogle(presentingViewController: rootVC)
+                Task {
+                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                          let rootViewController = windowScene.windows.first?.rootViewController else {
+                        print("Root view controller bulunamadı")
+                        return
                     }
+                    await viewModel.signInWithGoogle(presentingViewController: rootViewController)
                 }
             },
             isLoading: viewModel.isLoading
@@ -199,8 +253,8 @@ private extension LoginView {
 
 // MARK: - Design Constants
 private enum LayoutConstants {
-    static let mainSpacing: CGFloat = 32
-    static let topSpacing: CGFloat = 20
+    static let mainSpacing: CGFloat = 20
+    static let topSpacing: CGFloat = 0
     static let bottomSpacing: CGFloat = 40
     static let horizontalPadding: CGFloat = 24
     static let formSpacing: CGFloat = 24
@@ -242,36 +296,6 @@ struct ErrorToast: View {
 #Preview {
     LoginView()
         .environmentObject(Router())
-}
-
-struct ViewControllerResolver: UIViewControllerRepresentable {
-    var onResolve: (UIViewController) -> Void
-    func makeUIViewController(context: Context) -> UIViewController {
-        let viewController = UIViewController()
-        DispatchQueue.main.async {
-            onResolve(viewController)
-        }
-        return viewController
-    }
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
-
-// Simple button for Google Sign In with SwiftUI
-struct GoogleSignInButton: View {
-    var action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: "globe")
-                Text("Sign in with Google")
-            }
-            .foregroundColor(.white)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color.red)
-            .cornerRadius(8)
-        }
-    }
 }
 
 

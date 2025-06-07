@@ -33,24 +33,10 @@ private extension AuthHeaderView {
         VStack(spacing: HeaderSpacing.logoToTitle) {
             if showAnimation {
                 AnimatedLogoView()
-            } else {
-                staticLogoView
             }
             
             titleSection
         }
-    }
-    
-    var staticLogoView: some View {
-        Image(systemName: "fork.knife.circle.fill")
-            .font(.system(size: 80, weight: .light))
-            .foregroundStyle(logoGradient)
-            .shadow(
-                color: AppColors.accent.opacity(0.3),
-                radius: 10,
-                x: 0,
-                y: 5
-            )
     }
     
     var titleSection: some View {
@@ -81,17 +67,6 @@ private extension AuthHeaderView {
             .padding(.top, HeaderSpacing.subtitlePadding)
     }
     
-    var logoGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                AppColors.accent,
-                AppColors.accent.opacity(0.7)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-    
     var titleGradient: LinearGradient {
         LinearGradient(
             colors: [
@@ -106,11 +81,11 @@ private extension AuthHeaderView {
 
 // MARK: - Design Constants
 private enum HeaderSpacing {
-    static let main: CGFloat = 8
-    static let logoToTitle: CGFloat = 4
-    static let titleToSubtitle: CGFloat = 8
-    static let subtitlePadding: CGFloat = 4
-    static let bottom: CGFloat = 8
+    static let main: CGFloat = 4
+    static let logoToTitle: CGFloat = -20
+    static let titleToSubtitle: CGFloat = 4
+    static let subtitlePadding: CGFloat = 2
+    static let bottom: CGFloat = 4
 }
 
 private enum HeaderFonts {
@@ -119,7 +94,7 @@ private enum HeaderFonts {
 }
 
 private enum HeaderLayout {
-    static let titleOffset: CGFloat = -8
+    static let titleOffset: CGFloat = -15
 }
 
 // MARK: - Convenience Views

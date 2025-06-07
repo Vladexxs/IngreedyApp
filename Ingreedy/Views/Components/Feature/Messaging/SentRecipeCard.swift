@@ -14,6 +14,9 @@ struct SentRecipeCard: View {
             if let sender = sender {
                 if let urlString = sender.profileImageUrl, !urlString.isEmpty {
                     KFImage(URL(string: urlString))
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 96, height: 96)))
+                        .cacheMemoryOnly() // Profile resimleri için memory-only cache
+                        .forceRefresh() // Fresh data
                         .resizable()
                         .scaledToFill()
                         .frame(width: 48, height: 48)

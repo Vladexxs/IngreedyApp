@@ -9,6 +9,7 @@ class LoginViewModel: BaseViewModel {
     @Published var loginModel: LoginModel = LoginModel(email: "", password: "")
     @Published var isLoggedIn: Bool = false
     @Published var loginSuccess: Bool = false
+    @Published var needsUsernameSetup: Bool = false
     
     private let authService: AuthenticationServiceProtocol
     
@@ -68,37 +69,61 @@ class LoginViewModel: BaseViewModel {
             isLoading = true
             error = nil
             
+            print("🚀 [GoogleSignIn] Starting Google Sign-In process...")
+            
             let userAuthentication = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController)
             guard let idToken = userAuthentication.user.idToken?.tokenString else {
+                print("❌ [GoogleSignIn] Failed to get Google ID Token")
                 handleError(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to get Google ID Token."]))
                 return
             }
             
             // Get user's full name from Google
             let fullName = userAuthentication.user.profile?.name ?? ""
+            print("👤 [GoogleSignIn] Google profile name: '\(fullName)'")
+            print("📧 [GoogleSignIn] Google email: '\(userAuthentication.user.profile?.email ?? "nil")'")
             
             let accessToken = userAuthentication.user.accessToken.tokenString
             let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: accessToken)
             
+            print("🔥 [GoogleSignIn] Signing in with Firebase...")
             // Sign in with Firebase
             let authResult = try await Auth.auth().signIn(with: credential)
             
+            print("✅ [GoogleSignIn] Firebase sign-in successful for user: \(authResult.user.uid)")
+            print("📧 [GoogleSignIn] Firebase user email: \(authResult.user.email ?? "nil")")
+            print("👤 [GoogleSignIn] Firebase user displayName: \(authResult.user.displayName ?? "nil")")
+            
             // Update user's display name if it's empty
             if authResult.user.displayName?.isEmpty ?? true {
+                print("🔄 [GoogleSignIn] Updating Firebase displayName...")
                 let changeRequest = authResult.user.createProfileChangeRequest()
                 changeRequest.displayName = fullName
                 try await changeRequest.commitChanges()
+                print("✅ [GoogleSignIn] Firebase displayName updated")
             }
             
-            // Ensure Firestore user document exists
+            // Ensure Firestore user document exists and check setup status
             if let user = Auth.auth().currentUser {
-                try await FirebaseAuthenticationService.shared.ensureFirestoreUserDocument(for: user, fullName: fullName)
+                print("🔍 [GoogleSignIn] Checking Firestore user document...")
+                let userNeedsSetup = try await FirebaseAuthenticationService.shared.ensureFirestoreUserDocument(for: user, fullName: fullName)
+                
+                print("🎯 [GoogleSignIn] User needs setup: \(userNeedsSetup)")
+                
+                isLoading = false
+                isLoggedIn = true
+                
+                if userNeedsSetup {
+                    print("🔧 [GoogleSignIn] Setting needsUsernameSetup = true")
+                    needsUsernameSetup = true
+                } else {
+                    print("✅ [GoogleSignIn] User setup complete, navigating to home")
+                    loginSuccess = true
+                }
             }
             
-            isLoading = false
-            isLoggedIn = true
-            loginSuccess = true
         } catch {
+            print("❌ [GoogleSignIn] Error: \(error.localizedDescription)")
             isLoading = false
             isLoggedIn = false
             handleError(error)

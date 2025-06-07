@@ -303,6 +303,9 @@ struct OutgoingFriendRequestCard: View {
             // Profile Image
             if let url = request.toUserProfileImageUrl, !url.isEmpty {
                 KFImage(URL(string: url))
+                    .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 100, height: 100)))
+                    .cacheMemoryOnly()
+                    .forceRefresh()
                     .resizable()
                     .scaledToFill()
                     .frame(width: 50, height: 50)

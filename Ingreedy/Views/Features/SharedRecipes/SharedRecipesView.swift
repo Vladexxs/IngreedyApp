@@ -120,17 +120,15 @@ struct SharedRecipesView: View {
     
     private var segmentControl: some View {
         HStack(spacing: 0) {
-            ForEach(Array(segmentTitles.enumerated()), id: \.offset) { (idx, title) in
+            ForEach(0..<segmentTitles.count, id: \.self) { idx in
                 Button(action: { selectedTab = idx }) {
-                    Text(title)
+                    Text(segmentTitles[idx])
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(selectedTab == idx ? .white : AppColors.primary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(selectedTab == idx ? AppColors.accent : AppColors.card)
                 }
-                .cornerRadius(idx == 0 ? 18 : 0, corners: [.topLeft, .bottomLeft])
-                .cornerRadius(idx == segmentTitles.count - 1 ? 18 : 0, corners: [.topRight, .bottomRight])
             }
         }
         .frame(maxWidth: .infinity)
@@ -138,7 +136,6 @@ struct SharedRecipesView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .padding(.horizontal, 24)
         .padding(.top, 18)
-        .padding(.bottom, 8)
     }
     
     private var contentView: some View {

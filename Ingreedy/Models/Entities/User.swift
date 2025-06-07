@@ -1,15 +1,16 @@
 import Foundation
 
 // MARK: - User Model
-struct User: Codable, Identifiable {
+struct User: Codable, Identifiable, Equatable {
     let id: String
     let email: String
     var fullName: String
-    let username: String?
+    var username: String?
     let favorites: [Int]
     let friends: [Friend]?
     let profileImageUrl: String?
     let createdAt: Date?
+    var hasCompletedSetup: Bool
     
     // MARK: - Initializer
     init(
@@ -20,7 +21,8 @@ struct User: Codable, Identifiable {
         favorites: [Int] = [],
         friends: [Friend]? = nil,
         profileImageUrl: String? = nil,
-        createdAt: Date? = nil
+        createdAt: Date? = nil,
+        hasCompletedSetup: Bool = false
     ) {
         self.id = id
         self.email = email
@@ -30,5 +32,18 @@ struct User: Codable, Identifiable {
         self.friends = friends
         self.profileImageUrl = profileImageUrl
         self.createdAt = createdAt
+        self.hasCompletedSetup = hasCompletedSetup
+    }
+    
+    // MARK: - Equatable
+    static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id &&
+               lhs.email == rhs.email &&
+               lhs.fullName == rhs.fullName &&
+               lhs.username == rhs.username &&
+               lhs.favorites == rhs.favorites &&
+               lhs.friends == rhs.friends &&
+               lhs.profileImageUrl == rhs.profileImageUrl &&
+               lhs.hasCompletedSetup == rhs.hasCompletedSetup
     }
 } 

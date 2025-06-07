@@ -3,17 +3,14 @@ import SwiftUI
 struct AnimatedLogoView: View {
     // MARK: - Properties
     private let animationFileName: String
-    private let fallbackIcon: String
     private let logoSize: CGSize
     
     // MARK: - Initialization
     init(
-        animationFileName: String = "logo-animation",
-        fallbackIcon: String = "fork.knife.circle.fill",
-        logoSize: CGSize = CGSize(width: 150, height: 150)
+        animationFileName: String = "orange-chef",
+        logoSize: CGSize = CGSize(width: 180, height: 180)
     ) {
         self.animationFileName = animationFileName
-        self.fallbackIcon = fallbackIcon
         self.logoSize = logoSize
     }
     
@@ -23,7 +20,7 @@ struct AnimatedLogoView: View {
             if isAnimationFileAvailable {
                 lottieAnimationView
             } else {
-                fallbackSystemIconView
+                fallbackChefIcon
             }
         }
     }
@@ -41,27 +38,10 @@ private extension AnimatedLogoView {
         .frame(width: logoSize.width, height: logoSize.height)
     }
     
-    var fallbackSystemIconView: some View {
-        Image(systemName: fallbackIcon)
-            .font(.system(size: 80, weight: .light))
-            .foregroundStyle(logoGradient)
-            .shadow(
-                color: AppColors.accent.opacity(0.3),
-                radius: 10,
-                x: 0,
-                y: 5
-            )
-    }
-    
-    var logoGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                AppColors.accent,
-                AppColors.accent.opacity(0.7)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    var fallbackChefIcon: some View {
+        Text("👨‍🍳")
+            .font(.system(size: 100))
+            .frame(width: logoSize.width, height: logoSize.height)
     }
 }
 

@@ -284,6 +284,9 @@ struct UserCard: View {
                 // Profile Image
                 if let url = user.profileImageUrl, !url.isEmpty {
                     KFImage(URL(string: url))
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 100, height: 100)))
+                        .cacheMemoryOnly() // Profile resimleri için memory-only cache
+                        .forceRefresh() // Fresh data
                         .resizable()
                         .scaledToFill()
                         .frame(width: 50, height: 50)

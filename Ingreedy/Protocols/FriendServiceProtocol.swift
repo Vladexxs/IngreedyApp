@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseFirestore
 
 // MARK: - Friend Service Protocol
 protocol FriendServiceProtocol {
@@ -10,4 +11,8 @@ protocol FriendServiceProtocol {
     func cancelFriendRequest(_ requestId: String) async throws
     func fetchUserFriends() async throws -> [User]
     func removeFriend(_ friendId: String) async throws
+    
+    // Real-time listeners
+    func listenToIncomingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration?
+    func listenToOutgoingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration?
 } 

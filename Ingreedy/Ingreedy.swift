@@ -28,22 +28,16 @@ struct Ingreedy: App {
         // Check auth status and navigate to appropriate screen
         router.checkAuthAndNavigate()
         
-        // Kingfisher yapılandırması
+        // Kingfisher yapılandırması - Safe configuration
         let cache = ImageCache.default
         cache.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024 // 100 MB
-        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB
+        cache.diskStorage.config.sizeLimit = 300 * 1024 * 1024 // 300 MB
+        cache.memoryStorage.config.expiration = .seconds(600) // 10 dakika
+        cache.diskStorage.config.expiration = .seconds(3600) // 1 saat
         
-        // Firebase Storage URL'leri için özel yapılandırma
-        let modifier = AnyModifier { request in
-            var request = request
-            request.timeoutInterval = 30
-            return request
-        }
-        
+        // Basit ve güvenli default options
         KingfisherManager.shared.defaultOptions = [
-            .requestModifier(modifier),
-            .transition(.fade(0.2)),
-            .cacheOriginalImage
+            .transition(.fade(0.2))
         ]
     }
     

@@ -3,6 +3,7 @@ import Combine
 import FirebaseFirestore
 import FirebaseStorage
 import SwiftUI
+import Kingfisher
 
 /// ProfileViewModel, kullanıcı profil bilgilerini ve çıkış işlemlerini yöneten ViewModel sınıfı
 @MainActor
@@ -23,17 +24,24 @@ class ProfileViewModel: BaseViewModel {
         self.authService = authService
         super.init()
         fetchCurrentUser()
-        // Mevcut kullanıcının fotoğrafını başlangıçta yükle
-        if let userId = self.user?.id {
-            fetchUser(withId: userId) // Bu, fetchUser içindeki testDownloadImage'i tetikleyecek
-        }
     }
     
     // MARK: - Public Methods
     
     /// Mevcut kullanıcı bilgilerini servis üzerinden alır
     func fetchCurrentUser() {
-        user = authService.currentUser
+        print("[ProfileViewModel] fetchCurrentUser çağrıldı")
+        // Cache'i temizle ve fresh data al
+        if let currentUser = authService.currentUser {
+            print("[ProfileViewModel] AuthService'den kullanıcı alındı: \(currentUser.id)")
+            // Önce local user'ı güncelle
+            user = currentUser
+            // Sonra Firestore'dan fresh data çek
+            fetchUser(withId: currentUser.id)
+        } else {
+            print("[ProfileViewModel] AuthService'den kullanıcı alınamadı")
+            user = nil
+        }
     }
     
     /// Kullanıcıyı sistemden çıkışını gerçekleştirir
@@ -41,6 +49,12 @@ class ProfileViewModel: BaseViewModel {
         performNetwork({ completion in
             do {
                 try self.authService.logout()
+                
+                // Cache temizleme işlemini güvenli hale getir
+                DispatchQueue.global(qos: .background).async {
+                    CacheManager.shared.clearAllCaches()
+                }
+                
                 completion(.success(()))
             } catch {
                 completion(.failure(error))
@@ -49,7 +63,25 @@ class ProfileViewModel: BaseViewModel {
             self?.isLoggedOut = true
             self?.downloadedProfileImage = nil // Çıkış yapıldığında resmi temizle
             self?.user = nil
+            print("[ProfileViewModel] Logout completed and profile caches cleared")
         })
+    }
+    
+    /// Kullanıcı adının uygunluğunu kontrol eder
+    func checkUsernameAvailability(_ username: String) async -> Bool {
+        let db = Firestore.firestore()
+        let trimmedUsername = username.trimmingCharacters(in: .whitespaces).lowercased()
+        
+        do {
+            let snapshot = try await db.collection("users")
+                .whereField("username", isEqualTo: trimmedUsername)
+                .getDocuments()
+            
+            return snapshot.documents.isEmpty
+        } catch {
+            print("Username availability check error: \(error)")
+            return false
+        }
     }
     
     /// Kullanıcının favori tariflerini Firestore'dan ve API'den çeker
@@ -96,12 +128,18 @@ class ProfileViewModel: BaseViewModel {
 
     // Firestore'dan kullanıcıyı çek ve profil fotoğrafını indirmeyi tetikle
     func fetchUser(withId id: String) {
+        print("[ProfileViewModel] fetchUser başlatıldı, ID: \(id)")
         let db = Firestore.firestore()
         db.collection("users").document(id).getDocument { [weak self] snapshot, error in
-            guard let self = self, let data = snapshot?.data() else { return }
+            guard let self = self, let data = snapshot?.data() else { 
+                print("[ProfileViewModel] Firestore verisi alınamadı: \(error?.localizedDescription ?? "Unknown error")")
+                return 
+            }
             // Her alanı tek tek kontrol et ve default değer ata
             let email = data["email"] as? String ?? ""
             let fullName = data["fullName"] as? String ?? ""
+            let username = data["username"] as? String
+            let hasCompletedSetup = data["hasCompletedSetup"] as? Bool ?? false
             let favorites = data["favorites"] as? [Int] ?? []
             // friends alanı array of string veya array of dict olabilir
             var friends: [Friend] = []
@@ -116,19 +154,38 @@ class ProfileViewModel: BaseViewModel {
             }
             let profileImageUrl = data["profileImageUrl"] as? String
             let createdAt = (data["createdAt"] as? Timestamp)?.dateValue()
+            
+            print("[ProfileViewModel] Firestore'dan alınan FRESH veriler:")
+            print("  - Email: \(email)")
+            print("  - FullName: \(fullName)")
+            print("  - Username: \(username ?? "nil")")
+            print("  - ProfileImageUrl: \(profileImageUrl ?? "nil")")
+            print("  - HasCompletedSetup: \(hasCompletedSetup)")
+            
             let userWithId = User(
                 id: id,
                 email: email,
                 fullName: fullName,
+                username: username,
                 favorites: favorites,
                 friends: friends,
                 profileImageUrl: profileImageUrl,
-                createdAt: createdAt
+                createdAt: createdAt,
+                hasCompletedSetup: hasCompletedSetup
             )
             DispatchQueue.main.async {
+                print("[ProfileViewModel] FRESH User modeli güncellendi")
                 self.user = userWithId
+                
+                // AuthService cache'ini de hemen güncelle
+                self.authService.updateCurrentUser(userWithId)
+                
+                // Profil resmini yükle - hem Kingfisher hem de backup için
                 if let imageUrl = profileImageUrl, !imageUrl.isEmpty {
+                    print("[ProfileViewModel] Profil resmi indiriliyor...")
                     self.downloadAndSetProfileImage(fromPathForUserId: id)
+                } else {
+                    print("[ProfileViewModel] Profil resmi URL'si boş veya nil")
                 }
             }
         }
@@ -136,14 +193,34 @@ class ProfileViewModel: BaseViewModel {
 
     // Firestore'a kullanıcı kaydet/güncelle
     func saveUser(_ user: User, completion: ((Error?) -> Void)? = nil) {
+        print("[ProfileViewModel] saveUser çağrıldı: \(user.fullName), username: \(user.username ?? "nil")")
         let db = Firestore.firestore()
         do {
             var userData = try user.asDictionary()
             userData.removeValue(forKey: "id")
-            db.collection("users").document(user.id).setData(userData, merge: true) { error in
-                completion?(error)
+            userData["updatedAt"] = FieldValue.serverTimestamp() // Güncelleme zamanını ekle
+            
+            db.collection("users").document(user.id).setData(userData, merge: true) { [weak self] error in
+                if let error = error {
+                    print("[ProfileViewModel] Firestore save error: \(error.localizedDescription)")
+                    completion?(error)
+                } else {
+                    print("[ProfileViewModel] Firestore save successful - FRESH DATA SAVED")
+                    // Update local user immediately with fresh data
+                    DispatchQueue.main.async {
+                        self?.user = user
+                        // Update AuthService cache immediately with fresh data
+                        self?.authService.updateCurrentUser(user)
+                        print("[ProfileViewModel] Local user and AuthService cache updated with FRESH data")
+                        
+                        // Veri güncellendikten sonra fresh data'yı tekrar çek
+                        self?.fetchUser(withId: user.id)
+                    }
+                    completion?(nil)
+                }
             }
         } catch {
+            print("[ProfileViewModel] User serialization error: \(error.localizedDescription)")
             completion?(error)
         }
     }
@@ -154,11 +231,18 @@ class ProfileViewModel: BaseViewModel {
         let db = Firestore.firestore()
         print("Updating DB with URL: \(url)")
         
-        // URL Firestore'a kaydedildikten sonra yeni resmi indir ve ata
-        // downloadAndSetProfileImage(fromPathForUserId: user.id) // Path ile indir
-
+        // Cache temizleme işlemini güvenli hale getir
+        DispatchQueue.global(qos: .background).async {
+            if let currentImageUrl = user.profileImageUrl {
+                CacheManager.shared.clearProfileImageCache(forURL: currentImageUrl)
+            }
+            CacheManager.shared.clearProfileImageCache(forURL: url)
+            CacheManager.shared.clearProfileImageCache(forUserId: user.id)
+        }
+        
         db.collection("users").document(user.id).updateData([
-            "profileImageUrl": url
+            "profileImageUrl": url,
+            "updatedAt": FieldValue.serverTimestamp()
         ]) { [weak self] error in
             guard let self = self else { return }
             if let error = error {
@@ -172,15 +256,21 @@ class ProfileViewModel: BaseViewModel {
                         id: user.id,
                         email: user.email,
                         fullName: user.fullName,
+                        username: user.username,
                         favorites: user.favorites,
                         friends: user.friends,
                         profileImageUrl: url,
-                        createdAt: user.createdAt
+                        createdAt: user.createdAt,
+                        hasCompletedSetup: user.hasCompletedSetup
                     )
                     self.user = updatedUser
+                    // AuthService cache'ini hemen güncelle
+                    self.authService.updateCurrentUser(updatedUser)
                 }
-                // URL güncellendikten sonra path kullanarak indir.
-                self.downloadAndSetProfileImage(fromPathForUserId: self.user!.id)
+                // Bir miktar bekledikten sonra fresh data çek
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.downloadAndSetProfileImage(fromPathForUserId: self.user!.id)
+                }
                 print("Local user profileImageUrl: \(self.user?.profileImageUrl ?? "nil")")
             }
         }

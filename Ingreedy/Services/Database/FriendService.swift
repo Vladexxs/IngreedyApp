@@ -283,4 +283,80 @@ class FriendService: FriendServiceProtocol {
         
         return !snapshot1.documents.isEmpty || !snapshot2.documents.isEmpty
     }
+    
+    // MARK: - Real-time Listeners
+    
+    /// Listen to incoming friend requests with real-time updates
+    func listenToIncomingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration? {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { 
+            print("❌ FriendService: No authenticated user for incoming requests listener")
+            return nil
+        }
+        
+        print("🔄 FriendService: Setting up real-time listener for incoming requests")
+        
+        return db.collection("friendRequests")
+            .whereField("toUserId", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: FriendRequest.FriendRequestStatus.pending.rawValue)
+            .order(by: "timestamp", descending: true)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("❌ FriendService: Error in incoming requests listener: \(error.localizedDescription)")
+                    completion([])
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("❌ FriendService: No documents in incoming requests snapshot")
+                    completion([])
+                    return
+                }
+                
+                print("✅ FriendService: Incoming requests listener received \(documents.count) documents")
+                
+                let requests = documents.compactMap { doc in
+                    FriendRequest(from: doc)
+                }
+                
+                print("✅ FriendService: Parsed \(requests.count) incoming friend requests")
+                completion(requests)
+            }
+    }
+    
+    /// Listen to outgoing friend requests with real-time updates
+    func listenToOutgoingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration? {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { 
+            print("❌ FriendService: No authenticated user for outgoing requests listener")
+            return nil
+        }
+        
+        print("🔄 FriendService: Setting up real-time listener for outgoing requests")
+        
+        return db.collection("friendRequests")
+            .whereField("fromUserId", isEqualTo: currentUserId)
+            .whereField("status", isEqualTo: FriendRequest.FriendRequestStatus.pending.rawValue)
+            .order(by: "timestamp", descending: true)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    print("❌ FriendService: Error in outgoing requests listener: \(error.localizedDescription)")
+                    completion([])
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("❌ FriendService: No documents in outgoing requests snapshot")
+                    completion([])
+                    return
+                }
+                
+                print("✅ FriendService: Outgoing requests listener received \(documents.count) documents")
+                
+                let requests = documents.compactMap { doc in
+                    FriendRequest(from: doc)
+                }
+                
+                print("✅ FriendService: Parsed \(requests.count) outgoing friend requests")
+                completion(requests)
+            }
+    }
 } 

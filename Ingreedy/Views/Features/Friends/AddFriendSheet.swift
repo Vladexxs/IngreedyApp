@@ -34,6 +34,8 @@ struct AddFriendSheet: View {
                         
                         TextField("Username", text: $username)
                             .textFieldStyle(PlainTextFieldStyle())
+                            .foregroundColor(AppColors.text)
+                            .tint(AppColors.accent)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
                     }

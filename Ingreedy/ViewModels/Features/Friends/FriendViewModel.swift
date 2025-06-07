@@ -206,6 +206,7 @@ class FriendViewModel: ObservableObject {
             toUserName: "Current User",
             toUserUsername: "currentuser",
             fromUserProfileImageUrl: nil,
+            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date()
         )
@@ -219,6 +220,7 @@ class FriendViewModel: ObservableObject {
             toUserName: "Current User",
             toUserUsername: "currentuser",
             fromUserProfileImageUrl: nil,
+            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date().addingTimeInterval(-3600) // 1 hour ago
         )
@@ -233,6 +235,7 @@ class FriendViewModel: ObservableObject {
             toUserName: "Mehmet Özkan",
             toUserUsername: "mehmetozkan",
             fromUserProfileImageUrl: nil,
+            toUserProfileImageUrl: nil,
             status: .pending,
             timestamp: Date().addingTimeInterval(-1800) // 30 minutes ago
         )
@@ -264,4 +267,4 @@ class FriendViewModel: ObservableObject {
         self.outgoingRequests = [testOutgoingRequest1]
         self.friends = [testFriend1, testFriend2]
     }
-} 
+}

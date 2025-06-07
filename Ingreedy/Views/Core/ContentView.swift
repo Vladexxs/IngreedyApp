@@ -23,6 +23,10 @@ struct ContentView: View {
                             LoginView()
                         case .register:
                             RegisterView()
+                        case .setupUsername:
+                            SetupUsernameView()
+                        case .loading:
+                            SplashLoadingView()
                         case .home:
                             HomeView()
                         case .recipes:
@@ -31,14 +35,34 @@ struct ContentView: View {
                             IngredientSuggestionView()
                         case .profile:
                             ProfileView()
+                        case .editProfile:
+                            EditProfileViewWrapper()
                         case .sharedRecipes:
                             SharedRecipesView()
+                        // Settings Pages
+                        case .modernSettings:
+                            ModernSettingsView()
+                        case .accountSettings:
+                            AccountSettingsView()
+                        case .privacySettings:
+                            PrivacySettingsView()
+                        case .notificationSettings:
+                            NotificationSettingsView()
+                        case .helpSupport:
+                            HelpSupportView()
+                        case .about:
+                            AboutView()
+                        case .termsPrivacy:
+                            TermsPrivacyView()
+                        case .deleteAccount:
+                            DeleteAccountView()
                         }
                     }
                     .frame(width: geometry.size.width)
                     
-                    // Tab bar'ı sadece oturum açıldığında göster
-                    if router.currentRoute != .login && router.currentRoute != .register {
+                    // Tab bar'ı sadece oturum açıldığında göster (loading ekranında da gizle)
+                    // Settings sayfalarında da tab bar'ı gizle
+                    if shouldShowTabBar {
                         CustomTabBar()
                             .frame(height: 90)
                             .background(
@@ -55,6 +79,16 @@ struct ContentView: View {
             // Global notification service'i başlat
             notificationService.setRouter(router)
         }
+    }
+    
+    // MARK: - Private Properties
+    
+    /// Tab bar'ın gösterilip gösterilmeyeceğini belirler
+    private var shouldShowTabBar: Bool {
+        let authRoutes: [Route] = [.login, .register, .setupUsername, .loading]
+        let settingsRoutes: [Route] = [.modernSettings, .accountSettings, .privacySettings, .notificationSettings, .helpSupport, .about, .termsPrivacy, .deleteAccount, .editProfile]
+        
+        return !authRoutes.contains(router.currentRoute) && !settingsRoutes.contains(router.currentRoute)
     }
 }
 

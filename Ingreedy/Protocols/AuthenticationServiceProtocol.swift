@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 // MARK: - Authentication Service Protocol
 protocol AuthenticationServiceProtocol {
@@ -9,4 +10,6 @@ protocol AuthenticationServiceProtocol {
     func logout() throws
     func resetPassword(email: String) async throws
     func checkUsernameAvailability(username: String) async throws -> Bool
+    func ensureFirestoreUserDocument(for firebaseUser: FirebaseAuth.User, fullName: String?) async throws -> Bool
+    func updateCurrentUser(_ user: User)
 }

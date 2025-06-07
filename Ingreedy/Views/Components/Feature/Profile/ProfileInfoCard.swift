@@ -5,33 +5,23 @@ struct ProfileInfoCard: View {
     @ObservedObject var viewModel: ProfileViewModel
     
     private func cleanURL(from urlString: String) -> URL? {
-        guard !urlString.isEmpty,
-              let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let originalUrl = URL(string: encoded) else {
-            return nil
+        guard !urlString.isEmpty else { return nil }
+        
+        // Önce decode et, sonra encode et (double encoding'i önlemek için)
+        let decoded = urlString.removingPercentEncoding ?? urlString
+        guard let encoded = decoded.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: encoded) else {
+            // Fallback: Direkt URL olarak dene
+            return URL(string: urlString)
         }
         
-        var components = URLComponents(url: originalUrl, resolvingAgainstBaseURL: false)
-        components?.port = nil
-        let cleanUrl = components?.url ?? originalUrl
-        return cleanUrl
+        return url
     }
     
     var body: some View {
         HStack(spacing: 16) {
-            if let downloadedImage = viewModel.downloadedProfileImage {
-                Image(uiImage: downloadedImage)
-                    .resizable()
-                    .clipShape(Circle())
-                    .frame(width: 56, height: 56)
-            } else if let urlString = viewModel.user?.profileImageUrl, let cleanUrl = cleanURL(from: urlString) {
-                KFImage(cleanUrl)
-                    .resizable()
-                    .clipShape(Circle())
-                    .frame(width: 56, height: 56)
-            } else {
-                defaultUserImagePlaceholder
-            }
+            profileImageView
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(viewModel.user?.fullName ?? "Kullanıcı Adı")
                     .font(.headline)
@@ -59,6 +49,44 @@ struct ProfileInfoCard: View {
         .padding(.top, 16)
     }
     
+    private var profileImageView: some View {
+        ZStack {
+            if let downloadedImage = viewModel.downloadedProfileImage {
+                Image(uiImage: downloadedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(Circle())
+                    .frame(width: 56, height: 56)
+            } else if let urlString = viewModel.user?.profileImageUrl, 
+                      !urlString.isEmpty, 
+                      let url = URL(string: urlString) {
+                // Profile image için URL'e timestamp ekleyerek fresh data al
+                let freshUrl = URL(string: "\(urlString)?t=\(Date().timeIntervalSince1970)")
+                
+                KFImage(freshUrl)
+                    .configureForProfileImage(size: CGSize(width: 112, height: 112))
+                    .placeholder {
+                        defaultUserImagePlaceholder
+                    }
+                    .onProgress { receivedSize, totalSize in
+                        // Optional: Progress tracking
+                    }
+                    .onSuccess { result in
+                        print("[ProfileInfoCard] Kingfisher loaded image successfully")
+                    }
+                    .onFailure { error in
+                        print("[ProfileInfoCard] Kingfisher failed to load image: \(error.localizedDescription)")
+                    }
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(Circle())
+                    .frame(width: 56, height: 56)
+            } else {
+                defaultUserImagePlaceholder
+            }
+        }
+    }
+    
     private var defaultUserImagePlaceholder: some View {
         Circle()
             .fill(AppColors.accent.opacity(0.2))
@@ -69,22 +97,4 @@ struct ProfileInfoCard: View {
                     .foregroundColor(AppColors.accent)
             )
     }
-}
-
-// SwiftUI Image'ı UIImage'e çevirmek için bir extension (gerekirse)
-/*
-extension Image {
-    func asUIImage() -> UIImage? {
-        let controller = UIHostingController(rootView: self)
-        let view = controller.view
-        let targetSize = controller.view.intrinsicContentSize
-        view?.bounds = CGRect(origin: .zero, size: targetSize)
-        view?.backgroundColor = .clear
-
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
-        }
-    }
-}
-*/ 
+} 

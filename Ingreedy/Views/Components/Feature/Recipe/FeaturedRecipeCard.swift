@@ -7,6 +7,7 @@ struct FeaturedRecipeCard: View {
         ZStack(alignment: .topLeading) {
             if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
                 KFImage(url)
+                    .configureForRecipeImage()
                     .resizable()
                     .scaledToFill()
                     .frame(width: 230, height: 130)

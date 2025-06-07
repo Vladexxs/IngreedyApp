@@ -1,4 +1,5 @@
 import SwiftUI
+import Kingfisher
 
 /// Kullanıcı profil ekranı
 @MainActor
@@ -7,7 +8,6 @@ struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
     @EnvironmentObject private var router: Router
     @State private var showEditProfile = false
-    @State private var showSideMenu = false
     
     // MARK: - Initialization
     init() {
@@ -21,8 +21,8 @@ struct ProfileView: View {
                 AppColors.background.ignoresSafeArea()
                 VStack(spacing: 0) {
                     ProfileHeaderView(onSettingsTapped: {
-                        withAnimation {
-                            showSideMenu = true
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            router.navigate(to: .modernSettings)
                         }
                     })
                     if let user = viewModel.user {
@@ -47,14 +47,27 @@ struct ProfileView: View {
                         dismissAction: { viewModel.error = nil }
                     )
                 }
-                
-                // Side Menu
-                ProfileSideMenu(isShowing: $showSideMenu, viewModel: viewModel, onEditProfile: {
-                    showEditProfile = true
-                })
             }
             .onChange(of: viewModel.isLoggedOut) { isLoggedOut in
                 if isLoggedOut { router.navigate(to: .login) }
+            }
+            .onChange(of: viewModel.user) { user in
+                // Preload profile image when user data changes - with fresh data
+                if let user = user,
+                   let urlString = user.profileImageUrl,
+                   !urlString.isEmpty,
+                   let url = URL(string: urlString) {
+                    print("[ProfileView] Preloading profile image: \(urlString)")
+                    
+                    KingfisherManager.shared.retrieveImage(with: url) { result in
+                        switch result {
+                        case .success(let imageResult):
+                            print("[ProfileView] Profile image preloaded successfully from: \(imageResult.cacheType)")
+                        case .failure(let error):
+                            print("[ProfileView] Profile image preload failed: \(error.localizedDescription)")
+                        }
+                    }
+                }
             }
             .onAppear {
                 if let user = viewModel.user {

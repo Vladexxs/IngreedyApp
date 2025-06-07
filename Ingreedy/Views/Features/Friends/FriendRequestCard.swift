@@ -17,6 +17,9 @@ struct FriendRequestCard: View {
                 if let imageURL = request.fromUserProfileImageUrl, 
                    let url = URL(string: imageURL) {
                     KFImage(url)
+                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 100, height: 100)))
+                        .cacheMemoryOnly() // Profile resimleri için memory-only cache
+                        .forceRefresh() // Fresh data
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 50, height: 50)
