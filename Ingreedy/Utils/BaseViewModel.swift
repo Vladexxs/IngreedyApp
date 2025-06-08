@@ -27,7 +27,7 @@ class BaseViewModel: ObservableObject {
     
     /// Hata yönetimi için kullanılır
     /// - Parameter error: İşlenecek hata
-    func handleError(_ error: Error) {
+    open func handleError(_ error: Error) {
         self.error = error
     }
     

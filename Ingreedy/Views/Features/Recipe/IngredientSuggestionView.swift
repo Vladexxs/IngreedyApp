@@ -4,6 +4,8 @@ import Kingfisher
 struct IngredientSuggestionView: View {
     @StateObject private var viewModel = IngredientSuggestionViewModel()
     @State private var showingClearAlert = false
+    @State private var showingAIChat = false
+
     @FocusState private var isTextFieldFocused: Bool // KEYBOARD FIX: Focus state
     
     var body: some View {
@@ -36,6 +38,8 @@ struct IngredientSuggestionView: View {
                                 actionButton
                             }
                             
+
+                            
                             // Results Section
                             if viewModel.isLoading {
                                 loadingSection
@@ -44,6 +48,9 @@ struct IngredientSuggestionView: View {
                             } else {
                                 resultsSection
                             }
+                            
+                            // AI Assistant Card (Bottom Section)
+                            aiAssistantSection
                             
                             Spacer(minLength: 100)
                         }
@@ -64,8 +71,12 @@ struct IngredientSuggestionView: View {
                 } message: {
                     Text("All selected ingredients and results will be cleared.")
                 }
+                .sheet(isPresented: $showingAIChat) {
+                    AIChatView(userIngredients: viewModel.userIngredients)
+                }
             }
             .navigationViewStyle(StackNavigationViewStyle())
+
         }
     }
     
@@ -444,6 +455,14 @@ struct IngredientSuggestionView: View {
             }
         }
     }
+    
+    // MARK: - AI Assistant Section
+    private var aiAssistantSection: some View {
+        AIAssistantCard(userIngredients: viewModel.userIngredients) {
+            showingAIChat = true
+        }
+    }
+
 }
 
 #Preview {
