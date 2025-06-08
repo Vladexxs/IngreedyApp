@@ -24,8 +24,8 @@ struct RecipeCard: View {
 private extension RecipeCard {
     
     var recipeImageView: some View {
-        KFImage(URL(string: recipe.image ?? ""))
-            .configureForRecipeImage()
+                                KFImage(URL(string: recipe.image ?? ""))
+                .configureForRecipeImage(size: CGSize(width: 300, height: 200))
             .placeholder {
                 Rectangle()
                     .fill(AppColors.card)

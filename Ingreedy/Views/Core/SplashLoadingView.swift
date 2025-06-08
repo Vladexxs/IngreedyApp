@@ -8,133 +8,146 @@ struct SplashLoadingView: View {
     @StateObject private var viewModel = LoadingViewModel()
     
     // MARK: - Animation States
-    @State private var logoScale: CGFloat = 0.8
-    @State private var logoOpacity: Double = 0.0
-    @State private var fadeAnimation: Bool = false
+    @State private var currentTipIndex = 0
+    @State private var tipOpacity: Double = 1.0
+    @State private var tipOffset: CGFloat = 0
+    @State private var glowAnimation = false
+    
+    // MARK: - Tips
+    private let appTips = [
+        "🍽️ Discover amazing recipes from around the world",
+        "📱 Save your favorite dishes for quick access",
+        "🔍 Search ingredients to find perfect recipes",
+        "👨‍🍳 Step-by-step cooking instructions await you",
+        "⭐ Rate and review recipes to help others"
+    ]
     
     // MARK: - Body
     var body: some View {
         ZStack {
-            // Arka plan
+            // Enhanced Background
             LinearGradient(
-                gradient: Gradient(colors: [
-                    AppColors.primary,
-                    AppColors.accent
+                gradient: Gradient(stops: [
+                    .init(color: AppColors.primary, location: 0.0),
+                    .init(color: AppColors.primary.opacity(0.8), location: 0.3),
+                    .init(color: AppColors.accent.opacity(0.9), location: 0.7),
+                    .init(color: AppColors.accent, location: 1.0)
                 ]),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 60) {
+            // Subtle pattern overlay
+            Circle()
+                .fill(.white.opacity(0.05))
+                .frame(width: 400, height: 400)
+                .blur(radius: 100)
+                .offset(x: -100, y: -200)
+            
+            Circle()
+                .fill(.white.opacity(0.03))
+                .frame(width: 300, height: 300)
+                .blur(radius: 80)
+                .offset(x: 150, y: 300)
+            
+            VStack(spacing: 0) {
                 Spacer()
                 
-                // Logo ve uygulama adı
-                VStack(spacing: 20) {
-                    // App Logo/Icon - Basit animasyon
-                    VStack(spacing: 15) {
-                        // Main logo with simple animation
-                        Image(systemName: "fork.knife.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.white)
-                            .scaleEffect(logoScale)
-                            .opacity(logoOpacity)
-                            .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
-                        
-                        // App name with fade animation
-                        Text("Ingreedy")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .opacity(fadeAnimation ? 1.0 : 0.7)
-                    }
-                    .onAppear {
-                        // Logo entrance animation
-                        withAnimation(.easeOut(duration: 1.0)) {
-                            logoScale = 1.0
-                            logoOpacity = 1.0
-                        }
-                        
-                        // Fade animation for text
-                        withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
-                            fadeAnimation = true
-                        }
-                    }
-                }
-                
-                Spacer().frame(height: 40)
-                
-                // Ana animasyon - Sadece orange-chef veya white-chef
-                Group {
-                    if Bundle.main.path(forResource: "orange-chef", ofType: "json") != nil {
-                        // Orange chef animasyonu (ana seçenek)
-                        LottieView(name: "orange-chef", loopMode: .loop)
-                            .frame(width: 250, height: 250)
-                    } else if Bundle.main.path(forResource: "white-chef", ofType: "json") != nil {
-                        // White chef animasyonu (fallback)
-                        LottieView(name: "white-chef", loopMode: .loop)
-                            .frame(width: 250, height: 250)
-                    } else {
-                        // Final fallback: Simple chef icon
-                        VStack {
-                            Image(systemName: "person.crop.artframe")
-                                .font(.system(size: 100))
-                                .foregroundColor(.white.opacity(0.8))
-                                .scaleEffect(fadeAnimation ? 1.1 : 1.0)
-                                .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: fadeAnimation)
-                            
-                            Text("👨‍🍳")
-                                .font(.system(size: 60))
-                                .scaleEffect(fadeAnimation ? 1.2 : 1.0)
-                                .animation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true), value: fadeAnimation)
-                        }
-                    }
-                }
-                .frame(height: 250)
-                
-                Spacer().frame(height: 40)
-                
-                // Loading text ve progress
+                // Main Animation Container
                 VStack(spacing: 25) {
-                    // Loading mesajı
-                    Text("Lezzetli tarifler hazırlanıyor...")
+                    // Lottie Animation with glow effect
+                    ZStack {
+                        // Glow background
+                        Circle()
+                            .fill(.white.opacity(glowAnimation ? 0.2 : 0.1))
+                            .frame(width: 400, height: 400)
+                            .blur(radius: 30)
+                            .scaleEffect(glowAnimation ? 1.1 : 1.0)
+                            .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: glowAnimation)
+                        
+                        // Main animation
+                        LottieView(name: "splash_screen_animation", loopMode: .loop)
+                            .frame(width: 350, height: 350)
+                            .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+                    }
+                    
+                    // Animated Tips Section
+                    VStack(spacing: 8) {
+                        Text("💡 Pro Tip")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white.opacity(0.7))
+                            .textCase(.uppercase)
+                            .tracking(1.5)
+                        
+                        Text(appTips[currentTipIndex])
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .opacity(tipOpacity)
+                            .offset(y: tipOffset)
+                            .frame(height: 45)
+                            .padding(.horizontal, 30)
+                    }
+                    .padding(.vertical, 15)
+                }
+                
+                Spacer().frame(height: 20)
+                
+                // Enhanced Progress Section
+                VStack(spacing: 15) {
+                    // Loading message with pulse
+                    Text("Preparing delicious recipes...")
                         .font(.headline)
                         .fontWeight(.medium)
-                        .foregroundColor(.white.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                        .opacity(fadeAnimation ? 1.0 : 0.7)
+                        .foregroundColor(.white)
+                        .opacity(glowAnimation ? 1.0 : 0.8)
+                        .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: glowAnimation)
                     
-                    // Progress bar
-                    VStack(spacing: 10) {
-                        // Progress bar arka plan
+                    // Enhanced Progress bar
+                    VStack(spacing: 8) {
+                        // Progress bar with better styling
                         ZStack(alignment: .leading) {
                             // Background
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.white.opacity(0.3))
-                                .frame(height: 8)
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(.white.opacity(0.2))
+                                .frame(height: 12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(.white.opacity(0.3), lineWidth: 1)
+                                )
                             
-                            // Progress fill
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(.white)
-                                .frame(width: CGFloat(viewModel.progress) * UIScreen.main.bounds.width * 0.7, height: 8)
+                            // Progress fill with gradient
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(LinearGradient(
+                                    colors: [.white, .white.opacity(0.8)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ))
+                                .frame(width: CGFloat(viewModel.progress) * UIScreen.main.bounds.width * 0.65, height: 12)
                                 .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
+                                .shadow(color: .white.opacity(0.5), radius: 4, x: 0, y: 0)
                         }
-                        .frame(width: UIScreen.main.bounds.width * 0.7)
+                        .frame(width: UIScreen.main.bounds.width * 0.65)
                         
-                        // Progress percentage
+                        // Progress percentage with clean styling
                         Text("\(Int(viewModel.progress * 100))%")
                             .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white.opacity(0.8))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
                     }
                 }
                 
                 Spacer()
             }
-            .padding(.horizontal, 40)
+            .padding(.horizontal, 30)
         }
         .onAppear {
             viewModel.startLoading()
+            startGlowAnimation()
+            startTipRotation()
         }
         .onChange(of: viewModel.isLoadingComplete) { completed in
             if completed {
@@ -143,6 +156,49 @@ struct SplashLoadingView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Animation Functions
+    private func startGlowAnimation() {
+        withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+            glowAnimation = true
+        }
+    }
+    
+    private func startTipRotation() {
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            withAnimation(.easeInOut(duration: 0.5)) {
+                tipOpacity = 0.0
+                tipOffset = -10
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                currentTipIndex = Int.random(in: 0..<appTips.count)
+                
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    tipOpacity = 1.0
+                    tipOffset = 0
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Backdrop Blur Helper
+struct BlurView: UIViewRepresentable {
+    let style: UIBlurEffect.Style
+    
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        return UIVisualEffectView(effect: UIBlurEffect(style: style))
+    }
+    
+    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {}
+}
+
+// MARK: - View Extension for Backdrop
+extension View {
+    func backdrop<T: View>(_ view: T) -> some View {
+        self.overlay(view)
     }
 }
 

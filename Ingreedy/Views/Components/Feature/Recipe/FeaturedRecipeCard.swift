@@ -6,8 +6,8 @@ struct FeaturedRecipeCard: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
-                KFImage(url)
-                    .configureForRecipeImage()
+                        KFImage(url)
+            .configureForRecipeImage(size: CGSize(width: 350, height: 200))
                     .resizable()
                     .scaledToFill()
                     .frame(width: 230, height: 130)

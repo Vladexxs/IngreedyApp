@@ -48,8 +48,8 @@ class ProfileViewModel: BaseViewModel {
             do {
                 try self.authService.logout()
                 
-                // Cache temizleme işlemini güvenli hale getir
-                DispatchQueue.global(qos: .background).async {
+                // Cache temizleme işlemini daha güvenli hale getir - CacheCallbackCoordinator hatası için
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     CacheManager.shared.clearAllCaches()
                 }
                 
@@ -234,13 +234,12 @@ class ProfileViewModel: BaseViewModel {
                     self.authService.updateCurrentUser(updatedUser)
                     
                                           // Wait longer before clearing selectedImage to ensure smooth transition
-                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                              DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                          self.selectedImage = nil
                          self.uploadProgress = 0.0
                          
-                         DispatchQueue.global(qos: .background).async {
-                             CacheManager.shared.clearProfileImageCache(forURL: url)
-                         }
+                         // Cache temizleme işlemini daha güvenli şekilde yap
+                         CacheManager.shared.clearProfileImageCache(forURL: url)
                      }
                 }
             }

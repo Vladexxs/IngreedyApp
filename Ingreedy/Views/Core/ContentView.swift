@@ -6,11 +6,13 @@ struct ContentView: View {
     // MARK: - Properties
     @EnvironmentObject private var router: Router
     @StateObject private var notificationService = NotificationService.shared
+    @State private var keyboardHeight: CGFloat = 0 // KEYBOARD FIX: Track keyboard height
     
     // MARK: - Body
     var body: some View {
-            ZStack {
-                // Arka plan
+        // AUTH FIX: Initial loading state'de arka plan göster
+        ZStack {
+            // Arka plan - her zaman göster
             AppColors.background.ignoresSafeArea(.all)
                 
                 // İçerik alanı
@@ -61,13 +63,15 @@ struct ContentView: View {
                     
                     // Tab bar'ı sadece oturum açıldığında göster (loading ekranında da gizle)
                     // Settings sayfalarında da tab bar'ı gizle
-                    if shouldShowTabBar {
+                    // KEYBOARD FIX: Klavye açıkken tabbar'ı gizle
+                    if shouldShowTabBar && keyboardHeight == 0 {
                         CustomTabBar()
                             .frame(height: 90)
                             .background(
                                 AppColors.tabBar
                                     .shadow(color: Color.black.opacity(0.1), radius: 10, y: -5)
                             )
+                            .transition(.move(edge: .bottom).combined(with: .opacity)) // SMOOTH TRANSITION
                 }
             }
         }
@@ -75,6 +79,30 @@ struct ContentView: View {
         .onAppear {
             // Global notification service'i başlat
             notificationService.setRouter(router)
+            
+            // Cache maintenance işlemini başlat (optimize edilmiş)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                CacheManager.shared.performMaintenanceIfNeeded()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+            // Memory warning'de sadece memory cache temizle
+            CacheManager.shared.handleMemoryWarning()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            // KEYBOARD FIX: Klavye açıldığında tabbar'ı gizle
+            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
+                let keyboardRectangle = keyboardFrame.cgRectValue
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    keyboardHeight = keyboardRectangle.height
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            // KEYBOARD FIX: Klavye kapandığında tabbar'ı göster
+            withAnimation(.easeInOut(duration: 0.3)) {
+                keyboardHeight = 0
+            }
         }
     }
     

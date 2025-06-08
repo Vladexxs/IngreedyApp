@@ -4,60 +4,68 @@ import Kingfisher
 struct IngredientSuggestionView: View {
     @StateObject private var viewModel = IngredientSuggestionViewModel()
     @State private var showingClearAlert = false
+    @FocusState private var isTextFieldFocused: Bool // KEYBOARD FIX: Focus state
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                AppColors.background.ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Hero Section
-                        heroSection
-                        
-                        // Search Section
-                        searchSection
-                        
-                        // Category Pills
-                        if viewModel.userIngredients.isEmpty && !viewModel.dynamicCategories.isEmpty {
-                            categorySection
-                        }
-                        
-                        // Selected Ingredients
-                        if !viewModel.userIngredients.isEmpty {
-                            selectedIngredientsSection
+        GeometryReader { geometry in
+            NavigationView {
+                ZStack {
+                    AppColors.background.ignoresSafeArea()
+                    
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Hero Section
+                            heroSection
                             
-                            // Stats Section
-                            statsSection
+                            // Search Section
+                            searchSection
                             
-                            // Action Button
-                            actionButton
+                            // Category Pills
+                            if viewModel.userIngredients.isEmpty && !viewModel.dynamicCategories.isEmpty {
+                                categorySection
+                            }
+                            
+                            // Selected Ingredients
+                            if !viewModel.userIngredients.isEmpty {
+                                selectedIngredientsSection
+                                
+                                // Stats Section
+                                statsSection
+                                
+                                // Action Button
+                                actionButton
+                            }
+                            
+                            // Results Section
+                            if viewModel.isLoading {
+                                loadingSection
+                            } else if let error = viewModel.error {
+                                errorSection(error)
+                            } else {
+                                resultsSection
+                            }
+                            
+                            Spacer(minLength: 100)
                         }
-                        
-                        // Results Section
-                        if viewModel.isLoading {
-                            loadingSection
-                        } else if let error = viewModel.error {
-                            errorSection(error)
-                        } else {
-                            resultsSection
-                        }
-                        
-                        Spacer(minLength: 100)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 80)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 80)
+                    .onTapGesture {
+                        // KEYBOARD FIX: ScrollView'a tıklandığında keyboard'u kapat
+                        isTextFieldFocused = false
+                    }
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .alert("Clear Ingredients", isPresented: $showingClearAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Clear", role: .destructive) {
+                        viewModel.clearIngredients()
+                    }
+                } message: {
+                    Text("All selected ingredients and results will be cleared.")
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .alert("Clear Ingredients", isPresented: $showingClearAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Clear", role: .destructive) {
-                    viewModel.clearIngredients()
-                }
-            } message: {
-                Text("All selected ingredients and results will be cleared.")
-            }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
     
@@ -99,16 +107,42 @@ struct IngredientSuggestionView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(AppColors.secondary)
+                    .foregroundColor(isTextFieldFocused ? AppColors.accent : AppColors.secondary)
+                    .animation(.easeInOut(duration: 0.2), value: isTextFieldFocused)
                 
-                TextField("Search ingredients (e.g. tomato, chicken)...", text: $viewModel.searchText)
+                ZStack(alignment: .leading) {
+                    // PLACEHOLDER FIX: Custom placeholder with proper color
+                    if viewModel.searchText.isEmpty {
+                        Text("Search ingredients (e.g. tomato, chicken)...")
+                            .foregroundColor(AppColors.secondary.opacity(0.7))
+                            .font(.system(size: 16))
+                    }
+                    
+                    TextField("", text: $viewModel.searchText)
                     .textFieldStyle(PlainTextFieldStyle())
                     .autocapitalization(.none)
+                        .foregroundColor(AppColors.primary) // TEXT COLOR FIX: Kahverengi ton
+                        .accentColor(AppColors.accent) // CURSOR COLOR: Accent renk
+                        .focused($isTextFieldFocused) // KEYBOARD FIX: Focus binding
+                        .submitLabel(.search) // KEYBOARD FIX: Search button
+                        .onSubmit {
+                            // Enter'a basıldığında ilk suggestion'ı ekle
+                            if let firstSuggestion = viewModel.ingredientSuggestions.first {
+                                viewModel.addIngredient(firstSuggestion)
+                            }
+                        }
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             .background(AppColors.card)
             .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isTextFieldFocused ? AppColors.accent.opacity(0.6) : 
+                           (viewModel.searchText.isEmpty ? Color.clear : AppColors.accent.opacity(0.3)), lineWidth: 1.5)
+            ) // ACTIVE STATE: Focus durumunda daha belirgin border
+            .animation(.easeInOut(duration: 0.2), value: isTextFieldFocused) // SMOOTH ANIMATION
             
             // Suggestion Dropdown
             if !viewModel.ingredientSuggestions.isEmpty {
@@ -116,6 +150,7 @@ struct IngredientSuggestionView: View {
                     ForEach(Array(viewModel.ingredientSuggestions.prefix(5).enumerated()), id: \.offset) { index, suggestion in
                         Button(action: {
                             viewModel.addIngredient(suggestion)
+                            isTextFieldFocused = false // KEYBOARD FIX: Suggestion seçildiğinde keyboard'u kapat
                         }) {
                             HStack {
                                 Image(systemName: "scope")

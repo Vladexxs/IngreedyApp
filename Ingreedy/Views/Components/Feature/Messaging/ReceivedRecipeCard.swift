@@ -52,6 +52,7 @@ struct ReceivedRecipeCard: View {
                     // En sağda: Yemek resmi
                     if let imageUrl = recipeDetail?.image, !imageUrl.isEmpty {
                         KFImage(URL(string: imageUrl))
+                .configureForRecipeImage()
                             .resizable()
                             .scaledToFill()
                             .frame(width: 48, height: 48)
@@ -77,6 +78,7 @@ struct ReceivedRecipeCard: View {
             if let user = user {
                 if let urlString = user.profileImageUrl, !urlString.isEmpty {
                     KFImage(URL(string: urlString))
+                        .configureForProfileImage()
                         .resizable()
                         .scaledToFill()
                         .frame(width: 48, height: 48)

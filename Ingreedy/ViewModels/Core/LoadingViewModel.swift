@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 /// Loading ekranı için ViewModel
 class LoadingViewModel: ObservableObject {
@@ -15,8 +16,14 @@ class LoadingViewModel: ObservableObject {
     
     // MARK: - Initialization
     init() {
-        // Rastgele loading süresi: 5-8 saniye arası (daha uzun)
-        self.loadingDuration = Double.random(in: 5.0...8.0)
+        // AUTH FIX: Authenticated user için hızlı loading
+        if Auth.auth().currentUser != nil {
+            // Authenticated user - fast loading (1-2 saniye)
+            self.loadingDuration = Double.random(in: 1.0...2.0)
+        } else {
+            // New user - normal loading (3-4 saniye)
+            self.loadingDuration = Double.random(in: 3.0...4.0)
+        }
     }
     
     // MARK: - Public Methods

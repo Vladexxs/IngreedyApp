@@ -45,6 +45,7 @@ struct EnhancedRecipeCard: View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topTrailing) {
                 KFImage(URL(string: recipe.image ?? ""))
+                    .configureForRecipeImage()
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 120)
@@ -117,7 +118,8 @@ struct PartialMatchCard: View {
     var body: some View {
         HStack(spacing: 12) {
             // Recipe Image
-            KFImage(URL(string: partialMatch.recipe.image ?? ""))
+                                KFImage(URL(string: partialMatch.recipe.image ?? ""))
+                        .configureForRecipeImage()
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 80, height: 80)

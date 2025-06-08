@@ -13,8 +13,8 @@ struct SentRecipeCard: View {
             // Gönderen profil fotoğrafı (her zaman en solda)
             if let sender = sender {
                 if let urlString = sender.profileImageUrl, !urlString.isEmpty {
-                    KFImage(URL(string: urlString))
-                        .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 96, height: 96)))
+                            KFImage(URL(string: urlString))
+            .configureForProfileImage()
                         .placeholder {
                             Circle()
                                 .fill(AppColors.primary.opacity(0.1))
@@ -53,8 +53,8 @@ struct SentRecipeCard: View {
                 HStack(alignment: .center, spacing: 16) {
                     // En solda: Yemek resmi
                     if let imageUrl = recipeDetail?.image, !imageUrl.isEmpty {
-                        KFImage(URL(string: imageUrl))
-                            .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 96, height: 96)))
+                                    KFImage(URL(string: imageUrl))
+                .configureForRecipeImage()
                             .placeholder {
                                 RoundedRectangle(cornerRadius: 10)
                                     .fill(AppColors.card.opacity(0.8))
@@ -89,8 +89,8 @@ struct SentRecipeCard: View {
                     if let receiver = receiver {
                         VStack(spacing: 4) {
                             if let url = receiver.profileImageUrl, !url.isEmpty {
-                                KFImage(URL(string: url))
-                                    .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 56, height: 56)))
+                                                KFImage(URL(string: url))
+                    .configureForProfileImage()
                                     .placeholder {
                                         Circle()
                                             .fill(AppColors.primary.opacity(0.1))

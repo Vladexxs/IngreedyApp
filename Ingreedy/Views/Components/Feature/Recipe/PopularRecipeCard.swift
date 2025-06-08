@@ -39,8 +39,8 @@ private extension PopularRecipeCard {
             Spacer()
             
             if let imageUrl = recipe.image, let url = URL(string: imageUrl) {
-                KFImage(url)
-                    .configureForRecipeImage()
+                            KFImage(url)
+                .configureForRecipeImage(size: CGSize(width: 250, height: 180))
                     .placeholder {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(AppColors.secondary.opacity(0.3))

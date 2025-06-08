@@ -2,6 +2,15 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
+// MARK: - Array Extension for Chunking
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
+
 class FriendService: FriendServiceProtocol {
     private let db = Firestore.firestore()
     
@@ -157,7 +166,7 @@ class FriendService: FriendServiceProtocol {
         try await requestRef.delete()
     }
     
-    // MARK: - Fetch User's Friends
+    // MARK: - Fetch User's Friends (OPTIMIZED - Batch çeken versiyon)
     func fetchUserFriends() async throws -> [User] {
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
             return [] 
@@ -166,27 +175,35 @@ class FriendService: FriendServiceProtocol {
         let userDoc = try await db.collection("users").document(currentUserId).getDocument()
         
         guard let userData = userDoc.data(),
-              let friendIds = userData["friends"] as? [String] else {
+              let friendIds = userData["friends"] as? [String],
+              !friendIds.isEmpty else {
             return []
         }
         
+        // OPTIMIZE: Batch olarak çek, maksimum 30 arkadaş (Firestore 'in' query limiti)
         var friends: [User] = []
         
-        for friendId in friendIds {
-            let friendDoc = try await db.collection("users").document(friendId).getDocument()
-            if let friendData = friendDoc.data() {
-                let friend = User(
-                    id: friendId,
-                    email: friendData["email"] as? String ?? "",
-                    fullName: friendData["fullName"] as? String ?? "",
-                    username: friendData["username"] as? String,
-                    favorites: friendData["favorites"] as? [Int] ?? [],
+        // Firestore 'in' query limiti 30, bu yüzden chunklara böl
+        let chunkSize = 30
+        for chunk in friendIds.chunked(into: chunkSize) {
+            let query = db.collection("users").whereField(FieldPath.documentID(), in: chunk)
+            let snapshot = try await query.getDocuments()
+            
+            let chunkFriends = snapshot.documents.compactMap { doc -> User? in
+                let data = doc.data()
+                return User(
+                    id: doc.documentID,
+                    email: data["email"] as? String ?? "",
+                    fullName: data["fullName"] as? String ?? "",
+                    username: data["username"] as? String,
+                    favorites: data["favorites"] as? [Int] ?? [],
                     friends: nil,
-                    profileImageUrl: friendData["profileImageUrl"] as? String,
-                    createdAt: (friendData["createdAt"] as? Timestamp)?.dateValue()
+                    profileImageUrl: data["profileImageUrl"] as? String,
+                    createdAt: (data["createdAt"] as? Timestamp)?.dateValue()
                 )
-                friends.append(friend)
             }
+            
+            friends.append(contentsOf: chunkFriends)
         }
         
         return friends

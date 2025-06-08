@@ -21,9 +21,14 @@ class FriendViewModel: ObservableObject {
     private var incomingRequestsListener: ListenerRegistration?
     private var outgoingRequestsListener: ListenerRegistration?
     
+    // PERFORMANCE: Cache mechanism
+    private var lastFriendsUpdate: Date?
+    private let cacheTimeout: TimeInterval = 300 // 5 dakika cache
+    private var hasInitialDataLoaded = false
+    
     init() {
         setupRealTimeListeners()
-        loadFriends()
+        // OPTIMIZE: İlk yüklemeyi lazy yapalım
     }
     
     deinit {
@@ -56,8 +61,15 @@ class FriendViewModel: ObservableObject {
         setupRealTimeListeners()
     }
     
-    // MARK: - Load Data
+    // MARK: - Load Data (OPTIMIZED with cache)
     func loadFriends() {
+        // Cache kontrolü
+        if let lastUpdate = lastFriendsUpdate,
+           Date().timeIntervalSince(lastUpdate) < cacheTimeout,
+           !friends.isEmpty {
+            return // Cache hala geçerli
+        }
+        
         isLoading = true
         errorMessage = nil
         
@@ -65,10 +77,19 @@ class FriendViewModel: ObservableObject {
             do {
                 let fetchedFriends = try await friendService.fetchUserFriends()
                 self.friends = fetchedFriends
+                self.lastFriendsUpdate = Date()
+                self.hasInitialDataLoaded = true
             } catch {
                 self.errorMessage = "Failed to load friends: \(error.localizedDescription)"
             }
             self.isLoading = false
+        }
+    }
+    
+    // OPTIMIZE: Lazy loading için
+    func loadFriendsIfNeeded() {
+        if !hasInitialDataLoaded {
+            loadFriends()
         }
     }
     
@@ -164,10 +185,16 @@ class FriendViewModel: ObservableObject {
         successMessage = nil
     }
     
-    // MARK: - Refresh All Data
+    // MARK: - Refresh All Data (OPTIMIZED)
     func refreshData() {
-        // Only refresh friends - real-time listeners handle requests automatically
+        // OPTIMIZE: Cache'i bypass etmek için force refresh
+        lastFriendsUpdate = nil
         loadFriends()
+    }
+    
+    // OPTIMIZE: Soft refresh - sadece cache geçersizse yükle
+    func softRefreshData() {
+        loadFriendsIfNeeded()
     }
     
     // MARK: - Cancel Friend Request

@@ -13,6 +13,7 @@ struct RecipeGridCard: View {
                     HStack {
                         Spacer()
                         KFImage(url)
+            .configureForRecipeImage()
                             .resizable()
                             .scaledToFill()
                             .frame(width: 155, height: 112)

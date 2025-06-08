@@ -63,8 +63,8 @@ struct ProfileInfoCard: View {
                !urlString.isEmpty, 
                let url = URL(string: urlString) {
                 
-                KFImage(url)
-                    .configureForProfileImage(size: CGSize(width: 112, height: 112))
+                            KFImage(url)
+                .configureForProfileImage(size: CGSize(width: 112, height: 112))
                     .placeholder {
                         defaultUserImagePlaceholder
                     }

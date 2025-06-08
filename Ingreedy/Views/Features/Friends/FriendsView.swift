@@ -50,7 +50,11 @@ struct FriendsView: View {
                     .environmentObject(friendViewModel)
             }
             .onAppear {
-                friendViewModel.refreshData()
+                // OPTIMIZE: Soft refresh - sadece gerekiyorsa veri yükle
+                friendViewModel.softRefreshData()
+                
+                // OPTIMIZE: Profile image cache warming
+                warmupProfileImageCache()
             }
             .overlay {
                 if friendViewModel.isLoading {
@@ -209,6 +213,37 @@ struct FriendsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
     }
+    
+    // MARK: - Performance Optimizations
+    private func warmupProfileImageCache() {
+        let allUsers = friendViewModel.friends + 
+                      friendViewModel.incomingRequests.compactMap { request in
+                          // Mock user objesi oluştur
+                          User(id: request.fromUserId, 
+                               email: "", 
+                               fullName: request.fromUserName, 
+                               username: request.fromUserUsername, 
+                               favorites: [], 
+                               friends: nil, 
+                               profileImageUrl: request.fromUserProfileImageUrl, 
+                               createdAt: nil)
+                      } +
+                      friendViewModel.outgoingRequests.compactMap { request in
+                          User(id: request.toUserId, 
+                               email: "", 
+                               fullName: request.toUserName, 
+                               username: request.toUserUsername, 
+                               favorites: [], 
+                               friends: nil, 
+                               profileImageUrl: request.toUserProfileImageUrl, 
+                               createdAt: nil)
+                      }
+        
+        let imageURLs = allUsers.compactMap { $0.profileImageUrl }.filter { !$0.isEmpty }
+        if !imageURLs.isEmpty {
+            CacheManager.shared.warmupCache(imageURLs: imageURLs)
+        }
+    }
 }
 
 // MARK: - Friend Card Component
@@ -222,6 +257,7 @@ struct FriendCard: View {
             // Profile Image
             if let url = friend.profileImageUrl, !url.isEmpty {
                 KFImage(URL(string: url))
+                    .configureForProfileImage(size: CGSize(width: 60, height: 60))
                     .resizable()
                     .scaledToFill()
                     .frame(width: 60, height: 60)
@@ -303,9 +339,7 @@ struct OutgoingFriendRequestCard: View {
             // Profile Image
             if let url = request.toUserProfileImageUrl, !url.isEmpty {
                 KFImage(URL(string: url))
-                    .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 100, height: 100)))
-                    .cacheMemoryOnly()
-                    .forceRefresh()
+                    .configureForProfileImage(size: CGSize(width: 80, height: 80))
                     .resizable()
                     .scaledToFill()
                     .frame(width: 50, height: 50)

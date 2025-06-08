@@ -94,7 +94,7 @@ struct EditProfilePhotoSection: View {
                !urlString.isEmpty, 
                let url = URL(string: urlString) {
                 
-                KFImage(url)
+                                KFImage(url)
                     .configureForProfileImage(size: CGSize(width: 200, height: 200))
                     .placeholder {
                         ZStack {

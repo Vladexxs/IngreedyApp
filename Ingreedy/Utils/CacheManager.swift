@@ -1,94 +1,251 @@
 import Foundation
 import Kingfisher
+import SwiftUI
 
 /// Kingfisher cache yönetimi için utility sınıfı
-/// MVVM pattern'e uygun olarak tasarlanmıştır
-final class CacheManager {
+/// SwiftUI pattern'e uygun olarak tasarlanmıştır
+/// CacheCallbackCoordinator hatası için optimize edilmiştir
+final class CacheManager: ObservableObject {
     
     // MARK: - Singleton
     static let shared = CacheManager()
-    private init() {}
+    private let serialQueue = DispatchQueue(label: "com.ingreedy.cache", qos: .utility)
     
-    // MARK: - Profile Image Cache Management
+    // MARK: - Published Properties
+    @Published var isPerformingMaintenance = false
     
-    /// Profile image cache'ini temizler (userId ile)
-    /// - Parameter userId: Kullanıcı ID'si
-    func clearProfileImageCache(forUserId userId: String) {
-        let imagePath = "profile_images/\(userId).jpg"
-        ImageCache.default.removeImage(forKey: imagePath)
-        logCacheOperation("Profile image cache cleared for user: \(userId)")
+    private init() {
+        setupCacheConfiguration()
+        startMaintenanceTimer()
     }
     
-    /// Belirli profile image URL'ini cache'den temizler
-    /// - Parameter url: Temizlenecek image URL'i
-    func clearProfileImageCache(forURL url: String) {
-        ImageCache.default.removeImage(forKey: url)
-        logCacheOperation("Profile image cache cleared for URL: \(url)")
+    deinit {
+        maintenanceTimer?.invalidate()
     }
     
-    /// Tüm profile image cache'lerini temizler
-    func clearAllProfileImageCaches() {
-        ImageCache.default.clearMemoryCache()
-        logCacheOperation("All profile image caches cleared")
+    // MARK: - Timer-based Maintenance
+    private var maintenanceTimer: Timer?
+    
+    private func startMaintenanceTimer() {
+        // Her 10 dakikada bir maintenance (daha az sık)
+        maintenanceTimer = Timer.scheduledTimer(withTimeInterval: 600, repeats: true) { [weak self] _ in
+            self?.performMaintenanceIfNeeded()
+        }
     }
     
-    // MARK: - Recipe Image Cache Management
-    
-    /// Recipe image cache'ini optimize eder
-    func optimizeRecipeImageCache() {
+    private func setupCacheConfiguration() {
         let cache = ImageCache.default
-        cache.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024 // 100 MB
-        cache.diskStorage.config.sizeLimit = 300 * 1024 * 1024 // 300 MB
-        logCacheOperation("Recipe image cache optimized")
+        
+        // Memory pressure handling - daha akıllı
+        cache.memoryStorage.config.cleanInterval = 60 // 1 dakikada bir
+        
+        // Auto cleanup - daha optimize
+        cache.cleanExpiredMemoryCache()
     }
     
-    // MARK: - General Cache Operations
+    // MARK: - Public Methods
     
-    /// URL cache'ini temizler (API calls için)
-    func clearURLCache() {
-        URLCache.shared.removeAllCachedResponses()
-        logCacheOperation("URL cache cleared")
+    /// Gerektiğinde cache maintenance gerçekleştir
+    func performMaintenanceIfNeeded() {
+        guard !isPerformingMaintenance else { return }
+        
+        serialQueue.async { [weak self] in
+            DispatchQueue.main.async {
+                self?.isPerformingMaintenance = true
+            }
+            
+            // Sadece expired cache'leri temizle
+            ImageCache.default.cleanExpiredMemoryCache()
+            ImageCache.default.cleanExpiredDiskCache()
+            
+            DispatchQueue.main.async {
+                self?.isPerformingMaintenance = false
+            }
+        }
     }
     
-    /// Memory pressure durumunda cache'i optimize eder
-    func handleMemoryPressure() {
-        ImageCache.default.clearMemoryCache()
-        logCacheOperation("Memory cache cleared due to pressure")
+    /// Acil durum cache reset (sadece gerektiğinde)
+    func emergencyReset() {
+        serialQueue.async {
+            ImageCache.default.clearMemoryCache()
+            print("🚨 Emergency cache reset performed")
+        }
     }
     
-    /// Tüm cache'leri temizler (logout için)
+    /// Profile image cache'ini temizle (logout için)
+    func clearProfileImageCache(forURL url: String) {
+        guard let imageURL = URL(string: url) else { return }
+        
+        serialQueue.async {
+            ImageCache.default.removeImage(forKey: imageURL.absoluteString)
+        }
+    }
+    
+    /// Tüm cache'leri güvenli şekilde temizle
     func clearAllCaches() {
-        clearAllProfileImageCaches()
-        clearURLCache()
-        logCacheOperation("All caches cleared")
+        serialQueue.async {
+            ImageCache.default.clearMemoryCache()
+            ImageCache.default.clearDiskCache()
+        }
     }
     
-    // MARK: - Private Helpers
+    /// Memory warning durumunda çağrılan fonksiyon
+    func handleMemoryWarning() {
+        serialQueue.async {
+            // Sadece memory cache'i temizle
+            ImageCache.default.clearMemoryCache()
+        }
+    }
     
-    private func logCacheOperation(_ message: String) {
-        // Cache operations logged silently
+    /// Cache statistics (Basitleştirilmiş versiyon)
+    func getCacheStatistics() -> (memoryUsage: String, diskUsage: String) {
+        do {
+            let diskSize = try ImageCache.default.diskStorage.totalSize()
+            return (memoryUsage: "Active", diskUsage: ByteCountFormatter.string(fromByteCount: Int64(diskSize), countStyle: .file))
+        } catch {
+            return (memoryUsage: "Active", diskUsage: "Unknown")
+        }
+    }
+    
+    /// Proactive cache warming - önemli resimleri önceden yükle
+    func warmupCache(imageURLs: [String], priority: Float = 0.5) {
+        serialQueue.async {
+            let group = DispatchGroup()
+            
+            for urlString in imageURLs.prefix(10) { // En fazla 10 resim
+                guard let url = URL(string: urlString) else { continue }
+                
+                group.enter()
+                KingfisherManager.shared.retrieveImage(
+                    with: url,
+                    options: [
+                        .cacheOriginalImage,
+                        .backgroundDecode
+                    ]
+                ) { _ in
+                    group.leave()
+                }
+            }
+            
+            group.notify(queue: .main) {
+                print("✅ Cache warmup completed for \(imageURLs.count) images")
+            }
+        }
+    }
+    
+    /// Memory pressure'a göre dinamik temizlik
+    func handleMemoryPressure(level: MemoryPressureLevel) {
+        serialQueue.async {
+            switch level {
+            case .low:
+                // Sadece expired olanları temizle
+                ImageCache.default.cleanExpiredMemoryCache()
+            case .medium:
+                // Memory cache'in yarısını temizle
+                let cache = ImageCache.default
+                cache.memoryStorage.config.totalCostLimit = cache.memoryStorage.config.totalCostLimit / 2
+                cache.clearMemoryCache()
+                // Sonra eski limite geri döndür
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024
+                }
+            case .high:
+                // Tüm memory cache'i temizle
+                ImageCache.default.clearMemoryCache()
+            }
+        }
     }
 }
 
+enum MemoryPressureLevel {
+    case low, medium, high
+}
+
 // MARK: - KFImage Extensions
+
 extension KFImage {
     
-    /// Profile image'lar için optimize edilmiş konfigürasyon
-    /// Cache'i kullanır ve performans odaklıdır
+    /// Minimum güvenli konfigürasyon
+    func configureMinimal() -> KFImage {
+        return self
+            .cacheOriginalImage() // Disk cache kullan
+            .backgroundDecode()
+            .placeholder {
+                Rectangle()
+                    .fill(Color(.systemGray6))
+                    .shimmering()
+            }
+            .fade(duration: 0.3)
+    }
+    
+    /// Profile image için optimize konfigürasyon
     func configureForProfileImage(size: CGSize = CGSize(width: 100, height: 100)) -> KFImage {
         return self
             .setProcessor(DownsamplingImageProcessor(size: size))
-            .fade(duration: 0.3)
-            .retry(maxCount: 3, interval: .seconds(0.5))
-            .cacheOriginalImage() // Orijinal görüntüyü cache'le
+            .cacheOriginalImage() // Disk cache kullan
+            .backgroundDecode()
+            .placeholder {
+                Circle()
+                    .fill(Color(.systemGray5))
+                    .overlay(
+                        Image(systemName: "person.circle.fill")
+                            .foregroundColor(.gray)
+                            .font(.system(size: size.width * 0.6))
+                    )
+            }
+            .fade(duration: 0.25)
     }
     
-    /// Recipe image'lar için standart konfigürasyon
-    /// Normal cache kullanır ve performans odaklıdır
-    func configureForRecipeImage(size: CGSize = CGSize(width: 400, height: 300)) -> KFImage {
+    /// Recipe image için optimize konfigürasyon
+    func configureForRecipeImage(size: CGSize = CGSize(width: 300, height: 200)) -> KFImage {
         return self
             .setProcessor(DownsamplingImageProcessor(size: size))
+            .cacheOriginalImage()
+            .backgroundDecode()
+            .placeholder {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemGray6))
+                    .overlay(
+                        Image(systemName: "photo")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 40))
+                    )
+                    .shimmering()
+            }
             .fade(duration: 0.3)
-            .retry(maxCount: 2, interval: .seconds(0.5))
+    }
+}
+
+// MARK: - Shimmer Effect
+
+extension View {
+    func shimmering() -> some View {
+        self.modifier(ShimmerModifier())
+    }
+}
+
+struct ShimmerModifier: ViewModifier {
+    @State private var phase: CGFloat = 0
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, .white.opacity(0.3), .clear],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .rotationEffect(.degrees(45))
+                    .offset(x: phase)
+                    .clipped()
+            )
+            .onAppear {
+                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    phase = 200
+                }
+            }
     }
 } 

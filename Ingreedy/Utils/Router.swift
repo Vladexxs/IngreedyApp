@@ -52,9 +52,10 @@ enum Route {
 /// Uygulama navigasyon kontrolcüsü
 class Router: ObservableObject {
     // MARK: - Properties
-    @Published var currentRoute: Route = .login
+    @Published var currentRoute: Route = .loading // AUTH FIX: Loading ile başla, flicker önlensin
     @Published var hasNewSharedRecipeNotification: Bool = false
     private var authStateListener: AuthStateDidChangeListenerHandle?
+    private var hasPerformedInitialCheck = false // AUTH FIX: Initial check tracker
     
     // MARK: - Initialization
     init() {
@@ -116,10 +117,19 @@ class Router: ObservableObject {
     
     /// Kullanıcının oturum durumunu kontrol eder ve uygun sayfaya yönlendirir
     func checkAuthAndNavigate() {
-        if FirebaseAuthenticationService.shared.currentUser != nil {
+        // AUTH FIX: Initial check'i sadece bir kez yap
+        guard !hasPerformedInitialCheck else { return }
+        hasPerformedInitialCheck = true
+        
+        // AUTH FIX: Hemen senkron kontrol
+        if Auth.auth().currentUser != nil {
+            // Kullanıcı var, loading'e git ve detaylı kontrolü orada yap
             self.currentRoute = .loading
         } else {
-            self.currentRoute = .login
+            // Kullanıcı yok, direkt login'e git
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // Küçük delay ile flicker önle
+                self.currentRoute = .login
+            }
         }
     }
     
@@ -137,12 +147,17 @@ class Router: ObservableObject {
             guard let self = self else { return }
             
             DispatchQueue.main.async {
+                // AUTH FIX: Sadece actual auth state değişikliklerinde tepki ver
                 if user != nil {
+                    // User logged in
                     if self.currentRoute == .login || self.currentRoute == .register {
                         self.navigateWithoutAnimation(to: .loading)
                     }
                 } else {
-                    self.navigateWithoutAnimation(to: .login)
+                    // User logged out - sadece home/authenticated route'lardaysa login'e git
+                    if ![.login, .register, .loading].contains(self.currentRoute) {
+                        self.navigateWithoutAnimation(to: .login)
+                    }
                 }
             }
         }

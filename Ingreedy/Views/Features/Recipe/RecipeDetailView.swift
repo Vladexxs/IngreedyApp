@@ -18,6 +18,7 @@ struct RecipeDetailView: View {
                     // Hero Image + Custom Back & Favorite Button
                     ZStack(alignment: .top) {
                         KFImage(URL(string: recipe.image ?? ""))
+                    .configureForRecipeImage(size: CGSize(width: 400, height: 300))
                             .resizable()
                             .scaledToFill()
                             .frame(height: 400)
