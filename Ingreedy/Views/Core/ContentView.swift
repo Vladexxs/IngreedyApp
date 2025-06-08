@@ -9,10 +9,9 @@ struct ContentView: View {
     
     // MARK: - Body
     var body: some View {
-        GeometryReader { geometry in
             ZStack {
                 // Arka plan
-                AppColors.background.edgesIgnoringSafeArea(.all)
+            AppColors.background.ignoresSafeArea(.all)
                 
                 // İçerik alanı
                 VStack(spacing: 0) {
@@ -58,7 +57,7 @@ struct ContentView: View {
                             DeleteAccountView()
                         }
                     }
-                    .frame(width: geometry.size.width)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                     // Tab bar'ı sadece oturum açıldığında göster (loading ekranında da gizle)
                     // Settings sayfalarında da tab bar'ı gizle
@@ -68,13 +67,11 @@ struct ContentView: View {
                             .background(
                                 AppColors.tabBar
                                     .shadow(color: Color.black.opacity(0.1), radius: 10, y: -5)
-                                    .edgesIgnoringSafeArea(.bottom)
                             )
-                    }
                 }
             }
         }
-        .edgesIgnoringSafeArea(.bottom) // Alt güvenli alanı yoksay
+        .ignoresSafeArea(.container, edges: .bottom)
         .onAppear {
             // Global notification service'i başlat
             notificationService.setRouter(router)

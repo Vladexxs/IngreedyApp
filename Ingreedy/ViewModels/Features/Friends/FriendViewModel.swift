@@ -30,17 +30,13 @@ class FriendViewModel: ObservableObject {
         // Clean up listeners
         incomingRequestsListener?.remove()
         outgoingRequestsListener?.remove()
-        print("🧹 FriendViewModel: Cleaned up real-time listeners")
     }
     
     // MARK: - Setup Real-time Listeners
     private func setupRealTimeListeners() {
-        print("🔄 FriendViewModel: Setting up real-time listeners")
-        
         // Listen to incoming requests
         incomingRequestsListener = friendService.listenToIncomingFriendRequests { [weak self] requests in
             DispatchQueue.main.async {
-                print("✅ FriendViewModel: Received \(requests.count) incoming requests via listener")
                 self?.incomingRequests = requests
             }
         }
@@ -48,17 +44,13 @@ class FriendViewModel: ObservableObject {
         // Listen to outgoing requests
         outgoingRequestsListener = friendService.listenToOutgoingFriendRequests { [weak self] requests in
             DispatchQueue.main.async {
-                print("✅ FriendViewModel: Received \(requests.count) outgoing requests via listener")
                 self?.outgoingRequests = requests
             }
         }
-        
-        print("✅ FriendViewModel: Real-time listeners setup completed")
     }
     
     // MARK: - Restart Listeners (when user changes)
     func restartListeners() {
-        print("🔄 FriendViewModel: Restarting real-time listeners")
         incomingRequestsListener?.remove()
         outgoingRequestsListener?.remove()
         setupRealTimeListeners()
@@ -84,12 +76,10 @@ class FriendViewModel: ObservableObject {
     // Keep them for backward compatibility but they don't need to do anything
     func loadIncomingRequests() {
         // Real-time listener handles this automatically
-        print("📡 FriendViewModel: Incoming requests are handled by real-time listener")
     }
     
     func loadOutgoingRequests() {
         // Real-time listener handles this automatically
-        print("📡 FriendViewModel: Outgoing requests are handled by real-time listener")
     }
     
     // MARK: - Send Friend Request
@@ -178,7 +168,6 @@ class FriendViewModel: ObservableObject {
     func refreshData() {
         // Only refresh friends - real-time listeners handle requests automatically
         loadFriends()
-        print("🔄 FriendViewModel: Refreshed friends list - requests handled by real-time listeners")
     }
     
     // MARK: - Cancel Friend Request

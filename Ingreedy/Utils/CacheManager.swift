@@ -66,20 +66,21 @@ final class CacheManager {
     // MARK: - Private Helpers
     
     private func logCacheOperation(_ message: String) {
-        print("[CacheManager] \(message)")
+        // Cache operations logged silently
     }
 }
 
 // MARK: - KFImage Extensions
 extension KFImage {
     
-    /// Profile image'lar için güvenli konfigürasyon
-    /// Fresh data alır ama cache conflict'ini önler
+    /// Profile image'lar için optimize edilmiş konfigürasyon
+    /// Cache'i kullanır ve performans odaklıdır
     func configureForProfileImage(size: CGSize = CGSize(width: 100, height: 100)) -> KFImage {
         return self
             .setProcessor(DownsamplingImageProcessor(size: size))
             .fade(duration: 0.3)
-            .retry(maxCount: 2, interval: .seconds(1))
+            .retry(maxCount: 3, interval: .seconds(0.5))
+            .cacheOriginalImage() // Orijinal görüntüyü cache'le
     }
     
     /// Recipe image'lar için standart konfigürasyon

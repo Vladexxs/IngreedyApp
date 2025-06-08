@@ -16,7 +16,6 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     var currentUser: User? {
         // Cache'i kontrol et ve gerekirse temizle
         if let timestamp = cacheTimestamp, Date().timeIntervalSince(timestamp) > cacheExpirationInterval {
-            print("[AuthService] Cache expired, clearing cached user")
             cachedUser = nil
             cacheTimestamp = nil
         }
@@ -43,7 +42,6 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     }
     
     func updateCurrentUser(_ user: User) {
-        print("[AuthService] Updating cached user: \(user.fullName), username: \(user.username ?? "nil")")
         cachedUser = user
         cacheTimestamp = Date()
         
@@ -52,11 +50,7 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
             let changeRequest = firebaseUser.createProfileChangeRequest()
             changeRequest.displayName = user.fullName
             changeRequest.commitChanges { error in
-                if let error = error {
-                    print("[AuthService] Failed to update displayName: \(error.localizedDescription)")
-                } else {
-                    print("[AuthService] Firebase Auth displayName updated successfully")
-                }
+                // Handle error silently or log if needed
             }
         }
     }
@@ -68,35 +62,22 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     }
     
     func register(email: String, password: String, fullName: String, username: String) async throws -> User {
-        print("🚀 Starting registration process...")
-        print("📧 Email: \(email)")
-        print("👤 Full Name: \(fullName)")
-        print("🔖 Username: \(username)")
-        
         let normalizedUsername = username.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        print("🔄 Normalized username: '\(normalizedUsername)'")
         
         // Check username availability before creating auth user
         let isAvailable = try await checkUsernameAvailability(username: normalizedUsername)
         guard isAvailable else {
-            print("❌ Username '\(normalizedUsername)' is already taken!")
             throw NSError(domain: "AuthError", code: 409, userInfo: [NSLocalizedDescriptionKey: "This username is already taken"])
         }
-        
-        print("✅ Username is available, proceeding with Firebase Auth...")
         
         // Create Firebase Auth user
         let authResult = try await Auth.auth().createUser(withEmail: email, password: password)
         let user = authResult.user
         
-        print("🔥 Firebase Auth user created: \(user.uid)")
-        
         // Update display name
         let changeRequest = user.createProfileChangeRequest()
         changeRequest.displayName = fullName
         try await changeRequest.commitChanges()
-        
-        print("📝 Display name updated")
         
         // Create user document in Firestore
         let userData: [String: Any] = [
@@ -108,11 +89,7 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
             "hasCompletedSetup": true
         ]
         
-        print("💾 Saving user data to Firestore: \(userData)")
-        
         try await db.collection("users").document(user.uid).setData(userData)
-        
-        print("✅ User document created successfully")
         
         return User(
             id: user.uid,
@@ -128,7 +105,6 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
         // Cache ve timestamp'i tamamen temizle
         cachedUser = nil
         cacheTimestamp = nil
-        print("[AuthService] User logged out and cache completely cleared")
     }
     
     func resetPassword(email: String) async throws {
@@ -139,27 +115,13 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     func checkUsernameAvailability(username: String) async throws -> Bool {
         let normalizedUsername = username.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
-        print("🔍 Checking username availability for: '\(normalizedUsername)'")
-        
         do {
             let query = db.collection("users").whereField("username", isEqualTo: normalizedUsername)
             let snapshot = try await query.getDocuments()
             
-            print("📊 Query results: \(snapshot.documents.count) documents found")
-            
-            // Debug: Print found usernames
-            for doc in snapshot.documents {
-                let data = doc.data()
-                let foundUsername = data["username"] as? String ?? "nil"
-                print("📝 Found existing username: '\(foundUsername)' in document: \(doc.documentID)")
-            }
-            
             let isAvailable = snapshot.documents.isEmpty
-            print("✅ Username '\(normalizedUsername)' is \(isAvailable ? "AVAILABLE" : "TAKEN")")
-            
             return isAvailable
         } catch {
-            print("❌ Error checking username availability: \(error.localizedDescription)")
             throw error
         }
     }
@@ -178,22 +140,16 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
         )
     }
     
-    // Ensure Firestore user document exists for Google Sign-In users
+    // Ensure Firestore user document exists and check if user needs setup
     func ensureFirestoreUserDocument(for firebaseUser: FirebaseAuth.User, fullName: String? = nil) async throws -> Bool {
-        print("🔍 [ensureFirestoreUserDocument] Starting for user: \(firebaseUser.uid)")
-        print("📧 [ensureFirestoreUserDocument] Email: \(firebaseUser.email ?? "nil")")
-        print("👤 [ensureFirestoreUserDocument] Display Name: \(firebaseUser.displayName ?? "nil")")
-        print("📝 [ensureFirestoreUserDocument] Full Name parameter: \(fullName ?? "nil")")
-        
         let docRef = db.collection("users").document(firebaseUser.uid)
         
         do {
             let doc = try await docRef.getDocument()
-            print("📄 [ensureFirestoreUserDocument] Document exists: \(doc.exists)")
             
             if !doc.exists {
-                print("🆕 [ensureFirestoreUserDocument] Creating new user document...")
-                // Create new user document without username - user will set it up later
+                // This should only happen for Google Sign-In users
+                // Normal email/password users create their document during registration
                 let userData: [String: Any] = [
                     "id": firebaseUser.uid,
                     "email": firebaseUser.email ?? "",
@@ -206,30 +162,40 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
                     "hasCompletedSetup": false
                 ]
                 
-                print("💾 [ensureFirestoreUserDocument] User data to save: \(userData)")
                 try await docRef.setData(userData)
-                print("✅ [ensureFirestoreUserDocument] New user document created, needs username setup")
-                return true // User needs username setup
+                return true // Google Sign-In users need username setup
             } else {
-                print("📋 [ensureFirestoreUserDocument] Existing user found, checking setup status...")
-                // Check if existing user has completed setup
                 let data = doc.data()
-                let hasCompletedSetup = data?["hasCompletedSetup"] as? Bool ?? false
+                let hasCompletedSetup = data?["hasCompletedSetup"] as? Bool
                 let username = data?["username"] as? String ?? ""
                 
-                print("🔧 [ensureFirestoreUserDocument] hasCompletedSetup: \(hasCompletedSetup)")
-                print("👤 [ensureFirestoreUserDocument] existing username: '\(username)'")
+                // Handle legacy users (users created before hasCompletedSetup field was added)
+                if hasCompletedSetup == nil {
+                    // If user has a username, they are likely a normal email user who completed registration
+                    let isLegacyEmailUser = !username.isEmpty
+                    
+                    // Update document with hasCompletedSetup field
+                    let updateData: [String: Any] = [
+                        "hasCompletedSetup": isLegacyEmailUser,
+                        "updatedAt": FieldValue.serverTimestamp()
+                    ]
+                    
+                    try await docRef.updateData(updateData)
+                    
+                    // Return setup requirement based on username presence
+                    let needsSetup = username.isEmpty
+                    return needsSetup
+                }
                 
-                let needsSetup = !hasCompletedSetup || username.isEmpty
-                print("🎯 [ensureFirestoreUserDocument] User needs setup: \(needsSetup)")
+                // For users with hasCompletedSetup field:
+                // - If hasCompletedSetup is true, they don't need setup (normal email users)
+                // - If hasCompletedSetup is false OR username is empty, they need setup (Google users or incomplete setup)
+                let needsSetup = !(hasCompletedSetup ?? false) || username.isEmpty
                 
-                return needsSetup // Return true if user needs setup
+                return needsSetup
             }
         } catch {
-            print("❌ [ensureFirestoreUserDocument] Error: \(error.localizedDescription)")
             if error.localizedDescription.contains("permission") || error.localizedDescription.contains("insufficient") {
-                print("⚠️ [ensureFirestoreUserDocument] Warning: Cannot create/check Firestore user document due to permissions")
-                // Don't throw error for Google Sign-In, just log the warning
                 return false
             }
             throw error

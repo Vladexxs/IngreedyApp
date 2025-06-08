@@ -52,22 +52,7 @@ struct ProfileView: View {
                 if isLoggedOut { router.navigate(to: .login) }
             }
             .onChange(of: viewModel.user) { user in
-                // Preload profile image when user data changes - with fresh data
-                if let user = user,
-                   let urlString = user.profileImageUrl,
-                   !urlString.isEmpty,
-                   let url = URL(string: urlString) {
-                    print("[ProfileView] Preloading profile image: \(urlString)")
-                    
-                    KingfisherManager.shared.retrieveImage(with: url) { result in
-                        switch result {
-                        case .success(let imageResult):
-                            print("[ProfileView] Profile image preloaded successfully from: \(imageResult.cacheType)")
-                        case .failure(let error):
-                            print("[ProfileView] Profile image preload failed: \(error.localizedDescription)")
-                        }
-                    }
-                }
+                // Simple user change handling without aggressive preloading
             }
             .onAppear {
                 if let user = viewModel.user {
@@ -76,6 +61,8 @@ struct ProfileView: View {
                 viewModel.fetchFavoriteRecipes()
             }
             .sheet(isPresented: $showEditProfile, onDismiss: {
+                // Reset selectedImage when edit profile is dismissed
+                viewModel.selectedImage = nil
                 if let user = viewModel.user {
                     viewModel.fetchUser(withId: user.id)
                 }

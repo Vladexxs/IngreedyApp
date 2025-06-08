@@ -104,7 +104,6 @@ class SetupUsernameViewModel: BaseViewModel {
             currentUser.username = trimmedUsername
             currentUser.hasCompletedSetup = true
             authService.updateCurrentUser(currentUser)
-            print("[SetupUsernameViewModel] AuthService cache updated with username: \(trimmedUsername)")
         }
     }
 } 

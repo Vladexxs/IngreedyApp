@@ -70,25 +70,20 @@ class Router: ObservableObject {
     /// Belirtilen rotaya navigasyon gerçekleştirir
     /// - Parameter route: Hedef rota
     func navigate(to route: Route) {
-        print("Navigating from \(currentRoute.description()) to \(route.description())")
         self.currentRoute = route
     }
     
     /// Animasyonsuz navigasyon gerçekleştirir
     /// - Parameter route: Hedef rota
     func navigateWithoutAnimation(to route: Route) {
-        print("Navigating (no animation) from \(currentRoute.description()) to \(route.description())")
         self.currentRoute = route
     }
     
     /// Loading ekranı tamamlandığında çağrılır
     func onLoadingComplete() {
-        print("🔄 [Router] Loading completed, checking user setup status...")
-        
         Task { @MainActor in
             // Get fresh user data from Firestore (not cached)
             guard let firebaseUser = Auth.auth().currentUser else {
-                print("❌ [Router] No Firebase user found, navigating to login")
                 navigate(to: .login)
                 return
             }
@@ -98,27 +93,21 @@ class Router: ObservableObject {
                 let userNeedsSetup = try await FirebaseAuthenticationService.shared.ensureFirestoreUserDocument(for: firebaseUser)
                 
                 if userNeedsSetup {
-                    print("🔧 [Router] User needs username setup, navigating to setupUsername")
                     navigate(to: .setupUsername)
                 } else {
-                    print("✅ [Router] User setup complete, navigating to Home")
                     navigate(to: .home)
                 }
             } catch {
-                print("❌ [Router] Error checking user setup: \(error.localizedDescription)")
                 // If there's an error, check cached user as fallback
                 if let user = FirebaseAuthenticationService.shared.currentUser {
                     let needsUsernameSetup = !user.hasCompletedSetup || (user.username?.isEmpty ?? true)
                     
                     if needsUsernameSetup {
-                        print("🔧 [Router] Fallback: User needs username setup, navigating to setupUsername")
                         navigate(to: .setupUsername)
                     } else {
-                        print("✅ [Router] Fallback: User setup complete, navigating to Home")
                         navigate(to: .home)
                     }
                 } else {
-                    print("❌ [Router] No user data available, navigating to login")
                     navigate(to: .login)
                 }
             }
@@ -128,10 +117,8 @@ class Router: ObservableObject {
     /// Kullanıcının oturum durumunu kontrol eder ve uygun sayfaya yönlendirir
     func checkAuthAndNavigate() {
         if FirebaseAuthenticationService.shared.currentUser != nil {
-            print("User is logged in, showing loading screen")
             self.currentRoute = .loading
         } else {
-            print("User is not logged in, navigating to Login")
             self.currentRoute = .login
         }
     }

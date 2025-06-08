@@ -28,16 +28,17 @@ struct Ingreedy: App {
         // Check auth status and navigate to appropriate screen
         router.checkAuthAndNavigate()
         
-        // Kingfisher yapılandırması - Safe configuration
+        // Kingfisher yapılandırması - Optimized for faster loading
         let cache = ImageCache.default
-        cache.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024 // 100 MB
-        cache.diskStorage.config.sizeLimit = 300 * 1024 * 1024 // 300 MB
-        cache.memoryStorage.config.expiration = .seconds(600) // 10 dakika
-        cache.diskStorage.config.expiration = .seconds(3600) // 1 saat
+        cache.memoryStorage.config.totalCostLimit = 150 * 1024 * 1024 // 150 MB (artırıldı)
+        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024 // 500 MB (artırıldı)
+        cache.memoryStorage.config.expiration = .seconds(3600) // 1 saat (artırıldı)
+        cache.diskStorage.config.expiration = .seconds(7 * 24 * 3600) // 1 hafta (artırıldı)
         
-        // Basit ve güvenli default options
+        // Performance odaklı default options
         KingfisherManager.shared.defaultOptions = [
-            .transition(.fade(0.2))
+            .transition(.fade(0.2)),
+            .cacheOriginalImage // Orijinal görüntüleri cache'le
         ]
     }
     

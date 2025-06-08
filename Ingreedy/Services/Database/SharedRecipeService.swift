@@ -99,30 +99,17 @@ class SharedRecipeService: SharedRecipeServiceProtocol {
             // Eğer receivedRecipeId varsa, alıcının received koleksiyonundaki
             // ilgili dökümanı (receivedRecipeId ile belirtilen) çekip tepkiyi al.
             if let receivedId = receivedRecipeId {
-                print("[DEBUG] fetchSentRecipes - Sent dökümanından çekilen receivedRecipeId: \(receivedId)")
-                print("[DEBUG] fetchSentRecipes - Şu anki currentUserId: \(currentUserId)")
-                print("[DEBUG] fetchSentRecipes - Alıcı ID (toUserId): \(toUserId)") // <-- Alıcı ID'sini de logla
-                
-                let receivedDocRef = db.collection("users").document(toUserId) // <-- Alıcı ID'sini (toUserId) kullan
+                let receivedDocRef = db.collection("users").document(toUserId)
                     .collection("sharedRecipes").document("received")
                     .collection("received").document(receivedId)
-                    
-                print("[DEBUG] fetchSentRecipes - Alıcının received koleksiyonundan döküman aranıyor: \(receivedDocRef.path)")
                     
                 let receivedDoc = try? await receivedDocRef.getDocument()
                 
                 if let receivedDoc = receivedDoc, receivedDoc.exists {
                     if let receivedData = receivedDoc.data() {
                         reactionString = receivedData["reaction"] as? String
-                        print("[DEBUG] fetchSentRecipes - Alıcının received dökümanından tepki çekildi: \(reactionString ?? "Yok")")
-                    } else {
-                         print("[DEBUG] fetchSentRecipes - Alıcının received dökümanında veri yok: \(receivedId)")
                     }
-                } else {
-                     print("[DEBUG] fetchSentRecipes - Alıcının received dökümanı bulunamadı: \(receivedId)")
                 }
-            } else {
-                 print("[DEBUG] fetchSentRecipes - Sent dökümanında receivedRecipeId yok.")
             }
             
             sentRecipes.append(SentSharedRecipe(

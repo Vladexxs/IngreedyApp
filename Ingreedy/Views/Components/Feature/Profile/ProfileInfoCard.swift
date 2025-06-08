@@ -26,9 +26,16 @@ struct ProfileInfoCard: View {
                 Text(viewModel.user?.fullName ?? "Kullanıcı Adı")
                     .font(.headline)
                     .foregroundColor(AppColors.primary)
-                Text(viewModel.user?.email ?? "")
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.secondary)
+                
+                if let username = viewModel.user?.username, !username.isEmpty {
+                    Text("@\(username)")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondary)
+                } else {
+                    Text(viewModel.user?.email ?? "")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondary)
+                }
             }
             Spacer()
             Button(action: {
@@ -51,38 +58,50 @@ struct ProfileInfoCard: View {
     
     private var profileImageView: some View {
         ZStack {
-            if let downloadedImage = viewModel.downloadedProfileImage {
-                Image(uiImage: downloadedImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipShape(Circle())
-                    .frame(width: 56, height: 56)
-            } else if let urlString = viewModel.user?.profileImageUrl, 
-                      !urlString.isEmpty, 
-                      let url = URL(string: urlString) {
-                // Profile image için URL'e timestamp ekleyerek fresh data al
-                let freshUrl = URL(string: "\(urlString)?t=\(Date().timeIntervalSince1970)")
+            // Background: Always show URL image if available
+            if let urlString = viewModel.user?.profileImageUrl, 
+               !urlString.isEmpty, 
+               let url = URL(string: urlString) {
                 
-                KFImage(freshUrl)
+                KFImage(url)
                     .configureForProfileImage(size: CGSize(width: 112, height: 112))
                     .placeholder {
                         defaultUserImagePlaceholder
                     }
-                    .onProgress { receivedSize, totalSize in
-                        // Optional: Progress tracking
-                    }
-                    .onSuccess { result in
-                        print("[ProfileInfoCard] Kingfisher loaded image successfully")
-                    }
-                    .onFailure { error in
-                        print("[ProfileInfoCard] Kingfisher failed to load image: \(error.localizedDescription)")
-                    }
+                    .onSuccess { _ in }
+                    .onFailure { _ in }
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .clipShape(Circle())
                     .frame(width: 56, height: 56)
             } else {
                 defaultUserImagePlaceholder
+            }
+            
+            // Overlay: Show selected image when uploading
+            if let selectedImage = viewModel.selectedImage, viewModel.isUploading {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(Circle())
+                    .frame(width: 56, height: 56)
+                    .opacity(viewModel.uploadProgress >= 1.0 ? 0 : 1)
+                    .animation(.easeOut(duration: 0.5), value: viewModel.uploadProgress >= 1.0)
+            }
+            
+            // Progress overlay
+            if viewModel.isUploading {
+                Circle()
+                    .fill(Color.black.opacity(0.6))
+                    .frame(width: 56, height: 56)
+                    .overlay(
+                        AnimatedProgressRing(
+                            progress: viewModel.uploadProgress,
+                            lineWidth: 3,
+                            size: 40
+                        )
+                    )
+                    .transition(.opacity.combined(with: .scale))
             }
         }
     }

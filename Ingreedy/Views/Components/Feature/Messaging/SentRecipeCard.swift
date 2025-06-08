@@ -15,8 +15,17 @@ struct SentRecipeCard: View {
                 if let urlString = sender.profileImageUrl, !urlString.isEmpty {
                     KFImage(URL(string: urlString))
                         .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 96, height: 96)))
-                        .cacheMemoryOnly() // Profile resimleri için memory-only cache
-                        .forceRefresh() // Fresh data
+                        .placeholder {
+                            Circle()
+                                .fill(AppColors.primary.opacity(0.1))
+                                .overlay(
+                                    ProgressView()
+                                        .scaleEffect(0.7)
+                                        .tint(AppColors.accent)
+                                )
+                                .frame(width: 48, height: 48)
+                        }
+                        .fade(duration: 0.3)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 48, height: 48)
@@ -45,6 +54,18 @@ struct SentRecipeCard: View {
                     // En solda: Yemek resmi
                     if let imageUrl = recipeDetail?.image, !imageUrl.isEmpty {
                         KFImage(URL(string: imageUrl))
+                            .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 96, height: 96)))
+                            .placeholder {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(AppColors.card.opacity(0.8))
+                                    .overlay(
+                                        ProgressView()
+                                            .scaleEffect(0.7)
+                                            .tint(AppColors.accent)
+                                    )
+                                    .frame(width: 48, height: 48)
+                            }
+                            .fade(duration: 0.3)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 48, height: 48)
@@ -69,6 +90,18 @@ struct SentRecipeCard: View {
                         VStack(spacing: 4) {
                             if let url = receiver.profileImageUrl, !url.isEmpty {
                                 KFImage(URL(string: url))
+                                    .setProcessor(DownsamplingImageProcessor(size: CGSize(width: 56, height: 56)))
+                                    .placeholder {
+                                        Circle()
+                                            .fill(AppColors.primary.opacity(0.1))
+                                            .overlay(
+                                                ProgressView()
+                                                    .scaleEffect(0.5)
+                                                    .tint(AppColors.accent)
+                                            )
+                                            .frame(width: 28, height: 28)
+                                    }
+                                    .fade(duration: 0.3)
                                     .resizable()
                                     .scaledToFill()
                                     .frame(width: 28, height: 28)

@@ -103,71 +103,41 @@ class FriendService: FriendServiceProtocol {
     
     // MARK: - Fetch Incoming Friend Requests
     func fetchIncomingFriendRequests() async throws -> [FriendRequest] {
-        print("🔄 FriendService: Starting fetchIncomingFriendRequests")
-        
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
-            print("❌ FriendService: No authenticated user found")
             return [] 
         }
-        
-        print("✅ FriendService: Current user ID: \(currentUserId)")
         
         let query = db.collection("friendRequests")
             .whereField("toUserId", isEqualTo: currentUserId)
             .whereField("status", isEqualTo: FriendRequest.FriendRequestStatus.pending.rawValue)
             .order(by: "timestamp", descending: true)
         
-        print("🔄 FriendService: Executing Firebase query for incoming requests")
         let snapshot = try await query.getDocuments()
-        print("✅ FriendService: Firebase query completed, found \(snapshot.documents.count) documents")
         
         let requests = snapshot.documents.compactMap { doc in
-            print("🔄 FriendService: Processing document: \(doc.documentID)")
-            let request = FriendRequest(from: doc)
-            if request != nil {
-                print("✅ FriendService: Successfully parsed request from \(doc.data()["fromUserName"] ?? "unknown")")
-            } else {
-                print("❌ FriendService: Failed to parse request from document: \(doc.data())")
-            }
-            return request
+            return FriendRequest(from: doc)
         }
         
-        print("✅ FriendService: Returning \(requests.count) friend requests")
         return requests
     }
     
     // MARK: - Fetch Outgoing Friend Requests
     func fetchOutgoingFriendRequests() async throws -> [FriendRequest] {
-        print("🔄 FriendService: Starting fetchOutgoingFriendRequests")
-        
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
-            print("❌ FriendService: No authenticated user found for outgoing requests")
             return [] 
         }
-        
-        print("✅ FriendService: Current user ID for outgoing: \(currentUserId)")
         
         let query = db.collection("friendRequests")
             .whereField("fromUserId", isEqualTo: currentUserId)
             .whereField("status", isEqualTo: FriendRequest.FriendRequestStatus.pending.rawValue)
             .order(by: "timestamp", descending: true)
         
-        print("🔄 FriendService: Executing Firebase query for outgoing requests")
         let snapshot = try await query.getDocuments()
-        print("✅ FriendService: Firebase query completed, found \(snapshot.documents.count) outgoing documents")
         
         let requests = snapshot.documents.compactMap { doc in
-            print("🔄 FriendService: Processing outgoing document: \(doc.documentID)")
-            let request = FriendRequest(from: doc)
-            if request != nil {
-                print("✅ FriendService: Successfully parsed outgoing request to \(doc.data()["toUserName"] ?? "unknown")")
-            } else {
-                print("❌ FriendService: Failed to parse outgoing request from document: \(doc.data())")
-            }
-            return request
+            return FriendRequest(from: doc)
         }
         
-        print("✅ FriendService: Returning \(requests.count) outgoing friend requests")
         return requests
     }
     
@@ -189,30 +159,20 @@ class FriendService: FriendServiceProtocol {
     
     // MARK: - Fetch User's Friends
     func fetchUserFriends() async throws -> [User] {
-        print("🔄 FriendService: Starting fetchUserFriends")
-        
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
-            print("❌ FriendService: No authenticated user found for friends")
             return [] 
         }
         
-        print("✅ FriendService: Current user ID for friends: \(currentUserId)")
-        
         let userDoc = try await db.collection("users").document(currentUserId).getDocument()
-        print("🔄 FriendService: Retrieved user document")
         
         guard let userData = userDoc.data(),
               let friendIds = userData["friends"] as? [String] else {
-            print("❌ FriendService: No friends array found in user document")
             return []
         }
-        
-        print("✅ FriendService: Found \(friendIds.count) friend IDs: \(friendIds)")
         
         var friends: [User] = []
         
         for friendId in friendIds {
-            print("🔄 FriendService: Fetching friend data for ID: \(friendId)")
             let friendDoc = try await db.collection("users").document(friendId).getDocument()
             if let friendData = friendDoc.data() {
                 let friend = User(
@@ -226,13 +186,9 @@ class FriendService: FriendServiceProtocol {
                     createdAt: (friendData["createdAt"] as? Timestamp)?.dateValue()
                 )
                 friends.append(friend)
-                print("✅ FriendService: Added friend: \(friend.fullName)")
-            } else {
-                print("❌ FriendService: Failed to fetch friend data for ID: \(friendId)")
             }
         }
         
-        print("✅ FriendService: Returning \(friends.count) friends")
         return friends
     }
     
@@ -289,11 +245,8 @@ class FriendService: FriendServiceProtocol {
     /// Listen to incoming friend requests with real-time updates
     func listenToIncomingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
-            print("❌ FriendService: No authenticated user for incoming requests listener")
             return nil
         }
-        
-        print("🔄 FriendService: Setting up real-time listener for incoming requests")
         
         return db.collection("friendRequests")
             .whereField("toUserId", isEqualTo: currentUserId)
@@ -301,24 +254,19 @@ class FriendService: FriendServiceProtocol {
             .order(by: "timestamp", descending: true)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
-                    print("❌ FriendService: Error in incoming requests listener: \(error.localizedDescription)")
                     completion([])
                     return
                 }
                 
                 guard let documents = snapshot?.documents else {
-                    print("❌ FriendService: No documents in incoming requests snapshot")
                     completion([])
                     return
                 }
-                
-                print("✅ FriendService: Incoming requests listener received \(documents.count) documents")
                 
                 let requests = documents.compactMap { doc in
                     FriendRequest(from: doc)
                 }
                 
-                print("✅ FriendService: Parsed \(requests.count) incoming friend requests")
                 completion(requests)
             }
     }
@@ -326,11 +274,8 @@ class FriendService: FriendServiceProtocol {
     /// Listen to outgoing friend requests with real-time updates
     func listenToOutgoingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration? {
         guard let currentUserId = Auth.auth().currentUser?.uid else { 
-            print("❌ FriendService: No authenticated user for outgoing requests listener")
             return nil
         }
-        
-        print("🔄 FriendService: Setting up real-time listener for outgoing requests")
         
         return db.collection("friendRequests")
             .whereField("fromUserId", isEqualTo: currentUserId)
@@ -338,24 +283,19 @@ class FriendService: FriendServiceProtocol {
             .order(by: "timestamp", descending: true)
             .addSnapshotListener { snapshot, error in
                 if let error = error {
-                    print("❌ FriendService: Error in outgoing requests listener: \(error.localizedDescription)")
                     completion([])
                     return
                 }
                 
                 guard let documents = snapshot?.documents else {
-                    print("❌ FriendService: No documents in outgoing requests snapshot")
                     completion([])
                     return
                 }
-                
-                print("✅ FriendService: Outgoing requests listener received \(documents.count) documents")
                 
                 let requests = documents.compactMap { doc in
                     FriendRequest(from: doc)
                 }
                 
-                print("✅ FriendService: Parsed \(requests.count) outgoing friend requests")
                 completion(requests)
             }
     }

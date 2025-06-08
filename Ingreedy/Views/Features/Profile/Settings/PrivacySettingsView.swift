@@ -99,7 +99,7 @@ struct PrivacySettingsView: View {
                         icon: "chart.bar.fill",
                         title: "Analytics",
                         subtitle: "Help improve the app with usage data",
-                        iconColor: .orange,
+                        iconColor: AppColors.accent,
                         isOn: $viewModel.allowAnalytics
                     )
                 }

@@ -8,7 +8,8 @@ struct HomeView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                AppColors.background.edgesIgnoringSafeArea(.all)
+                AppColors.background.ignoresSafeArea(.all)
+                
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
                         // Header
@@ -30,14 +31,16 @@ struct HomeView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 32)
                         .padding(.bottom, 18)
+                        
                         // Featured
                         Text("Featured")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(AppColors.text)
                             .padding(.horizontal, 24)
+                        
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                ForEach(viewModel.featuredRecipes, id: \ .id) { recipe in
+                                ForEach(viewModel.featuredRecipes, id: \.id) { recipe in
                                     NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
                                         FeaturedRecipeCard(recipe: recipe)
                                     }
@@ -48,6 +51,7 @@ struct HomeView: View {
                         }
                         .padding(.top, 8)
                         .padding(.bottom, 32)
+                        
                         // Category
                         HStack {
                             Text("Category")
@@ -60,6 +64,7 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 8)
+                        
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 14) {
                                 ForEach(categories, id: \.self) { cat in
@@ -79,6 +84,7 @@ struct HomeView: View {
                             .padding(.horizontal, 16)
                         }
                         .padding(.bottom, 32)
+                        
                         // Popular Recipes
                         HStack {
                             Text("Popular Recipes")
@@ -91,8 +97,9 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 8)
+                        
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 20) {
-                            ForEach(viewModel.popularRecipes, id: \ .id) { recipe in
+                            ForEach(viewModel.popularRecipes, id: \.id) { recipe in
                                 NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
                                     PopularRecipeCard(
                                         recipe: recipe,
@@ -111,7 +118,9 @@ struct HomeView: View {
                     .padding(.bottom, 8)
                 }
             }
+            .navigationBarHidden(true)
         }
+        .navigationViewStyle(StackNavigationViewStyle())
         .onAppear {
             viewModel.reloadCurrentUser()
             viewModel.fetchUserFavorites()

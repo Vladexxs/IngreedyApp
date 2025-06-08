@@ -15,6 +15,7 @@ class ProfileViewModel: BaseViewModel {
     @Published var selectedImage: UIImage? // Kullanıcının galeriden seçtiği yeni resim
     @Published var downloadedProfileImage: UIImage? // Storage'dan indirilen mevcut profil resmi
     @Published var isUploading = false
+    @Published var uploadProgress: Double = 0.0
     
     // MARK: - Private Properties
     private let authService: AuthenticationServiceProtocol
@@ -30,16 +31,13 @@ class ProfileViewModel: BaseViewModel {
     
     /// Mevcut kullanıcı bilgilerini servis üzerinden alır
     func fetchCurrentUser() {
-        print("[ProfileViewModel] fetchCurrentUser çağrıldı")
         // Cache'i temizle ve fresh data al
         if let currentUser = authService.currentUser {
-            print("[ProfileViewModel] AuthService'den kullanıcı alındı: \(currentUser.id)")
             // Önce local user'ı güncelle
             user = currentUser
             // Sonra Firestore'dan fresh data çek
             fetchUser(withId: currentUser.id)
         } else {
-            print("[ProfileViewModel] AuthService'den kullanıcı alınamadı")
             user = nil
         }
     }
@@ -63,7 +61,6 @@ class ProfileViewModel: BaseViewModel {
             self?.isLoggedOut = true
             self?.downloadedProfileImage = nil // Çıkış yapıldığında resmi temizle
             self?.user = nil
-            print("[ProfileViewModel] Logout completed and profile caches cleared")
         })
     }
     
@@ -128,11 +125,9 @@ class ProfileViewModel: BaseViewModel {
 
     // Firestore'dan kullanıcıyı çek ve profil fotoğrafını indirmeyi tetikle
     func fetchUser(withId id: String) {
-        print("[ProfileViewModel] fetchUser başlatıldı, ID: \(id)")
         let db = Firestore.firestore()
         db.collection("users").document(id).getDocument { [weak self] snapshot, error in
             guard let self = self, let data = snapshot?.data() else { 
-                print("[ProfileViewModel] Firestore verisi alınamadı: \(error?.localizedDescription ?? "Unknown error")")
                 return 
             }
             // Her alanı tek tek kontrol et ve default değer ata
@@ -155,13 +150,6 @@ class ProfileViewModel: BaseViewModel {
             let profileImageUrl = data["profileImageUrl"] as? String
             let createdAt = (data["createdAt"] as? Timestamp)?.dateValue()
             
-            print("[ProfileViewModel] Firestore'dan alınan FRESH veriler:")
-            print("  - Email: \(email)")
-            print("  - FullName: \(fullName)")
-            print("  - Username: \(username ?? "nil")")
-            print("  - ProfileImageUrl: \(profileImageUrl ?? "nil")")
-            print("  - HasCompletedSetup: \(hasCompletedSetup)")
-            
             let userWithId = User(
                 id: id,
                 email: email,
@@ -174,18 +162,16 @@ class ProfileViewModel: BaseViewModel {
                 hasCompletedSetup: hasCompletedSetup
             )
             DispatchQueue.main.async {
-                print("[ProfileViewModel] FRESH User modeli güncellendi")
                 self.user = userWithId
                 
                 // AuthService cache'ini de hemen güncelle
                 self.authService.updateCurrentUser(userWithId)
                 
-                // Profil resmini yükle - hem Kingfisher hem de backup için
+                // Profil resmi URL'si varsa Kingfisher tarafından yüklenecek, ekstra yükleme gereksiz
                 if let imageUrl = profileImageUrl, !imageUrl.isEmpty {
-                    print("[ProfileViewModel] Profil resmi indiriliyor...")
-                    self.downloadAndSetProfileImage(fromPathForUserId: id)
+                    // Profil resmi URL'si mevcut
                 } else {
-                    print("[ProfileViewModel] Profil resmi URL'si boş veya nil")
+                    self.downloadedProfileImage = nil
                 }
             }
         }
@@ -193,121 +179,133 @@ class ProfileViewModel: BaseViewModel {
 
     // Firestore'a kullanıcı kaydet/güncelle
     func saveUser(_ user: User, completion: ((Error?) -> Void)? = nil) {
-        print("[ProfileViewModel] saveUser çağrıldı: \(user.fullName), username: \(user.username ?? "nil")")
         let db = Firestore.firestore()
         do {
             var userData = try user.asDictionary()
             userData.removeValue(forKey: "id")
-            userData["updatedAt"] = FieldValue.serverTimestamp() // Güncelleme zamanını ekle
+            userData["updatedAt"] = FieldValue.serverTimestamp()
             
             db.collection("users").document(user.id).setData(userData, merge: true) { [weak self] error in
                 if let error = error {
-                    print("[ProfileViewModel] Firestore save error: \(error.localizedDescription)")
                     completion?(error)
                 } else {
-                    print("[ProfileViewModel] Firestore save successful - FRESH DATA SAVED")
-                    // Update local user immediately with fresh data
                     DispatchQueue.main.async {
                         self?.user = user
-                        // Update AuthService cache immediately with fresh data
                         self?.authService.updateCurrentUser(user)
-                        print("[ProfileViewModel] Local user and AuthService cache updated with FRESH data")
-                        
-                        // Veri güncellendikten sonra fresh data'yı tekrar çek
                         self?.fetchUser(withId: user.id)
                     }
                     completion?(nil)
                 }
             }
         } catch {
-            print("[ProfileViewModel] User serialization error: \(error.localizedDescription)")
             completion?(error)
         }
     }
 
-    // Sadece profil fotoğrafı URL'sini güncelle
+    // Profil fotoğrafı URL'sini güncelle ve cache'i optimize et
     func updateProfileImageUrl(_ url: String) {
         guard let user = user else { return }
         let db = Firestore.firestore()
-        print("Updating DB with URL: \(url)")
-        
-        // Cache temizleme işlemini güvenli hale getir
-        DispatchQueue.global(qos: .background).async {
-            if let currentImageUrl = user.profileImageUrl {
-                CacheManager.shared.clearProfileImageCache(forURL: currentImageUrl)
-            }
-            CacheManager.shared.clearProfileImageCache(forURL: url)
-            CacheManager.shared.clearProfileImageCache(forUserId: user.id)
-        }
         
         db.collection("users").document(user.id).updateData([
             "profileImageUrl": url,
             "updatedAt": FieldValue.serverTimestamp()
         ]) { [weak self] error in
             guard let self = self else { return }
+            
             if let error = error {
-                print("Profil fotoğrafı URL güncelleme hatası: \(error)")
                 return
             }
+            
             DispatchQueue.main.async {
-                print("Firestore güncellendi: \(url)")
-                if let user = self.user {
+                if let currentUser = self.user {
                     let updatedUser = User(
-                        id: user.id,
-                        email: user.email,
-                        fullName: user.fullName,
-                        username: user.username,
-                        favorites: user.favorites,
-                        friends: user.friends,
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        fullName: currentUser.fullName,
+                        username: currentUser.username,
+                        favorites: currentUser.favorites,
+                        friends: currentUser.friends,
                         profileImageUrl: url,
-                        createdAt: user.createdAt,
-                        hasCompletedSetup: user.hasCompletedSetup
+                        createdAt: currentUser.createdAt,
+                        hasCompletedSetup: currentUser.hasCompletedSetup
                     )
                     self.user = updatedUser
-                    // AuthService cache'ini hemen güncelle
                     self.authService.updateCurrentUser(updatedUser)
+                    
+                                          // Wait longer before clearing selectedImage to ensure smooth transition
+                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                         self.selectedImage = nil
+                         self.uploadProgress = 0.0
+                         
+                         DispatchQueue.global(qos: .background).async {
+                             CacheManager.shared.clearProfileImageCache(forURL: url)
+                         }
+                     }
                 }
-                // Bir miktar bekledikten sonra fresh data çek
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.downloadAndSetProfileImage(fromPathForUserId: self.user!.id)
-                }
-                print("Local user profileImageUrl: \(self.user?.profileImageUrl ?? "nil")")
             }
         }
     }
 
-    // Profil fotoğrafı yükle ve URL'yi güncelle, sonra resmi indir
+    // Profil fotoğrafı yükle ve anında UI'ı güncelle
     func uploadProfileImage(_ image: UIImage) {
         guard let user = user else { return }
         isUploading = true
-        self.downloadedProfileImage = image // Yükleme sırasında geçici olarak seçilen resmi göster
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+        uploadProgress = 0.0
+        self.selectedImage = image
+        
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else { 
+            isUploading = false
+            return 
+        }
+        
         let imagePath = "profile_images/\(user.id).jpg"
         let ref = Storage.storage().reference().child(imagePath)
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
-        ref.putData(imageData, metadata: metadata) { [weak self] _, error in
+        
+        let uploadTask = ref.putData(imageData, metadata: metadata) { [weak self] _, error in
             guard let self = self else { return }
+            
             if let error = error {
-                print("Upload error: \(error)")
-                self.isUploading = false
-                // Hata durumunda eski indirilen resmi (varsa) veya placeholder'ı göstermek için nil yap
-                // self.downloadAndSetProfileImage(fromPathForUserId: user.id) // Tekrar eskiyi çekmeyi dene ya da
-                // self.downloadedProfileImage = nil // eğer placeholder istiyorsak
+                DispatchQueue.main.async {
+                    self.isUploading = false
+                }
                 return
             }
+            
             ref.downloadURL { url, error in
-                self.isUploading = false
-                if let error = error {
-                    print("Download URL error: \(error)")
-                    return
+                DispatchQueue.main.async {
+                    self.isUploading = false
+                    
+                    if let error = error {
+                            return
+                    }
+                    
+                    guard let downloadUrl = url else { 
+                        return 
+                    }
+                    
+                    self.uploadProgress = 1.0
+                    
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                    impactFeedback.impactOccurred()
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.updateProfileImageUrl(downloadUrl.absoluteString)
+                    }
                 }
-                guard let downloadUrl = url else { 
-                    print("URL is nil after upload")
-                    return 
-                }
-                print("Obtained download URL: \(downloadUrl.absoluteString)")
-                self.updateProfileImageUrl(downloadUrl.absoluteString) // Bu, downloadAndSetProfileImage'i tetikleyecek
+            }
+        }
+        
+        uploadTask.observe(.progress) { [weak self] snapshot in
+            guard let self = self,
+                  let progress = snapshot.progress else { return }
+            
+            let percentComplete = Double(progress.completedUnitCount) / Double(progress.totalUnitCount)
+            
+            DispatchQueue.main.async {
+                self.uploadProgress = percentComplete
             }
         }
     }
@@ -316,24 +314,18 @@ class ProfileViewModel: BaseViewModel {
     func downloadAndSetProfileImage(fromPathForUserId userId: String) {
         let imagePath = "profile_images/\(userId).jpg"
         let storageRef = Storage.storage().reference().child(imagePath)
-
-        print("[DownloadSDK] Storage referansı ile indirme deneniyor: \(imagePath)")
         
         storageRef.getData(maxSize: 10 * 1024 * 1024) { [weak self] data, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 if let error = error {
-                    let storageError = StorageErrorCode(rawValue: (error as NSError).code) ?? .unknown
-                    print("[DownloadSDK] İndirme hatası (SDK): \(error.localizedDescription) - Hata Kodu: \(storageError)")
                     self.downloadedProfileImage = nil // Hata durumunda resmi temizle
                     return
                 }
                 guard let data = data, let image = UIImage(data: data) else {
-                    print("[DownloadSDK] Veri alınamadı veya UIImage oluşturulamadı (SDK).")
                     self.downloadedProfileImage = nil // Hata durumunda resmi temizle
                     return
                 }
-                print("[DownloadSDK] İndirme BAŞARILI! UIImage oluşturuldu ve atandı (SDK).")
                 self.downloadedProfileImage = image
             }
         }

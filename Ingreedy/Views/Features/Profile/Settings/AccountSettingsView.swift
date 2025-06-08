@@ -175,7 +175,7 @@ struct AccountSettingsView: View {
                         icon: "key.fill",
                         title: "Change Password",
                         subtitle: "Update your password",
-                        iconColor: .orange,
+                        iconColor: AppColors.accent,
                         action: { showChangePasswordAlert() }
                     )
                 }

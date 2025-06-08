@@ -33,11 +33,7 @@ class NotificationService: NotificationServiceProtocol {
     // MARK: - Notification Setup
     private func setupNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                print("[DEBUG] Global notification permission granted")
-            } else if let error = error {
-                print("[DEBUG] Global notification permission error: \(error)")
-            }
+            // Handle notification permission silently
         }
     }
     
@@ -55,8 +51,6 @@ class NotificationService: NotificationServiceProtocol {
             .collection("sharedRecipes").document("received")
             .collection("received")
         
-        print("[DEBUG] Starting global notification listener for user: \(currentUserId)")
-        
         receivedRecipesListener = receivedRef
             .order(by: "timestamp", descending: true)
             .addSnapshotListener { [weak self] snapshot, error in
@@ -64,7 +58,6 @@ class NotificationService: NotificationServiceProtocol {
                     guard let self = self else { return }
                     
                     if let error = error {
-                        print("[DEBUG] Global notification listener error: \(error)")
                         return
                     }
                     
@@ -72,7 +65,6 @@ class NotificationService: NotificationServiceProtocol {
                     
                     // İlk yükleme ise bildirim gösterme
                     if self.isInitialLoad {
-                        print("[DEBUG] Initial load - skipping notifications")
                         self.isInitialLoad = false
                         return
                     }
@@ -92,7 +84,6 @@ class NotificationService: NotificationServiceProtocol {
     func stopListening() {
         receivedRecipesListener?.remove()
         receivedRecipesListener = nil
-        print("[DEBUG] Global notification listener stopped")
     }
     
     // MARK: - Handle New Recipe
@@ -100,8 +91,6 @@ class NotificationService: NotificationServiceProtocol {
         let data = document.data()
         let fromUserId = data["fromUserId"] as? String ?? ""
         let recipeId = data["recipeId"] as? Int ?? 0
-        
-        print("[DEBUG] New recipe detected! From: \(fromUserId), Recipe: \(recipeId)")
         
         // Global state'i güncelle
         hasNewSharedRecipe = true
@@ -128,9 +117,8 @@ class NotificationService: NotificationServiceProtocol {
         
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print("[DEBUG] Notification sent successfully")
         } catch {
-            print("[DEBUG] Failed to send notification: \(error)")
+            // Handle notification error silently
         }
     }
     
@@ -138,6 +126,5 @@ class NotificationService: NotificationServiceProtocol {
     func clearNotification() {
         hasNewSharedRecipe = false
         router?.setNewSharedRecipeNotification(false)
-        print("[DEBUG] Notifications cleared")
     }
 } 

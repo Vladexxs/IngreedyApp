@@ -186,7 +186,7 @@ struct ModernSettingsView: View {
                     icon: "externaldrive.fill",
                     title: "Storage & Data",
                     subtitle: "Cache, downloads, exports",
-                    iconColor: .orange,
+                    iconColor: AppColors.accent,
                     action: { /* TODO: Storage settings */ }
                 )
                 

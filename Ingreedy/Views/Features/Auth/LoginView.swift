@@ -31,13 +31,11 @@ struct LoginView: View {
         }
         .onChange(of: viewModel.loginSuccess) { success in
             if success {
-                print("🏠 [LoginView] loginSuccess changed to true, navigating to home")
                 router.navigate(to: .home)
             }
         }
         .onChange(of: viewModel.needsUsernameSetup) { needsSetup in
             if needsSetup {
-                print("🔧 [LoginView] needsUsernameSetup changed to true, navigating to setupUsername")
                 router.navigate(to: .setupUsername)
             }
         }
@@ -212,7 +210,6 @@ private extension LoginView {
                 Task {
                     guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                           let rootViewController = windowScene.windows.first?.rootViewController else {
-                        print("Root view controller bulunamadı")
                         return
                     }
                     await viewModel.signInWithGoogle(presentingViewController: rootViewController)
