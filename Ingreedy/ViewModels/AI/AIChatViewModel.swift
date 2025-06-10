@@ -81,9 +81,7 @@ class AIChatViewModel: BaseViewModel {
             let aiMessage = ChatMessage(
                 content: response.message,
                 isUser: false,
-                recipes: response.recipes,
                 suggestions: response.suggestions,
-                nutritionInfo: response.nutritionInfo,
                 hasProFeatures: response.hasProFeatures
             )
             

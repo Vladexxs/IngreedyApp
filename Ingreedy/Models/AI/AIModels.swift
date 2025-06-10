@@ -4,20 +4,7 @@ import Foundation
 struct AIResponse {
     let message: String
     let suggestions: [String]
-    let recipes: [AIRecipe] // Kept for compatibility but unused
-    let nutritionInfo: String? // Kept for compatibility but unused  
     let hasProFeatures: Bool
-}
-
-// MARK: - Simplified Models (kept for compatibility)
-struct AIRecipe: Identifiable {
-    let id: String
-    let name: String
-    let description: String
-    let imageURL: String
-    let category: String
-    let cuisine: String
-    let nutritionInfo: String?
 }
 
 // MARK: - Chat Models
@@ -26,9 +13,7 @@ struct ChatMessage: Identifiable {
     let content: String
     let isUser: Bool
     let timestamp: Date
-    let recipes: [AIRecipe]
     let suggestions: [String]
-    let nutritionInfo: String?
     let hasProFeatures: Bool
     
     init(
@@ -36,18 +21,14 @@ struct ChatMessage: Identifiable {
         content: String,
         isUser: Bool,
         timestamp: Date = Date(),
-        recipes: [AIRecipe] = [], // Unused but kept for compatibility
-        suggestions: [String] = [], // Now empty by default
-        nutritionInfo: String? = nil, // Unused but kept for compatibility
+        suggestions: [String] = [],
         hasProFeatures: Bool = false
     ) {
         self.id = id
         self.content = content
         self.isUser = isUser
         self.timestamp = timestamp
-        self.recipes = recipes
         self.suggestions = suggestions
-        self.nutritionInfo = nutritionInfo
         self.hasProFeatures = hasProFeatures
     }
     
@@ -58,7 +39,7 @@ struct ChatMessage: Identifiable {
     }
 }
 
-// MARK: - Gemini API Models
+// MARK: - Essential Gemini API Models
 struct GeminiRequest: Codable {
     let contents: [GeminiContent]
     let generationConfig: GeminiGenerationConfig
@@ -87,40 +68,9 @@ struct GeminiCandidate: Codable {
     let content: GeminiContent
 }
 
-// MARK: - Google Gemini API Models (kept for basic API communication)
+// MARK: - Minimal Tool Support (for API compatibility)
 struct GeminiTool: Codable {
-    let functionDeclarations: [GeminiFunctionDeclaration]?
-    let codeExecution: GeminiCodeExecution?
-    
-    init(functionDeclarations: [GeminiFunctionDeclaration]) {
-        self.functionDeclarations = functionDeclarations
-        self.codeExecution = nil
-    }
-    
-    init(codeExecution: GeminiCodeExecution) {
-        self.functionDeclarations = nil
-        self.codeExecution = codeExecution
-    }
-}
-
-struct GeminiFunctionDeclaration: Codable {
-    let name: String
-    let description: String
-    let parameters: GeminiParameters
-}
-
-struct GeminiParameters: Codable {
-    let type: String
-    let properties: [String: GeminiProperty]
-}
-
-struct GeminiProperty: Codable {
-    let type: String
-    let description: String
-}
-
-struct GeminiCodeExecution: Codable {
-    // Kept for API compatibility but unused
+    // Empty struct for API compatibility - tools are disabled
 }
 
 // MARK: - Error Models
@@ -134,15 +84,15 @@ enum AIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .configurationError(let message):
-            return "Yapılandırma Hatası: \(message)"
+            return "Configuration Error: \(message)"
         case .networkError(let message):
-            return "Ağ Hatası: \(message)"
+            return "Network Error: \(message)"
         case .apiError(let message):
-            return "API Hatası: \(message)"
+            return "API Error: \(message)"
         case .noResponse(let message):
-            return "Cevap Yok: \(message)"
+            return "No Response: \(message)"
         case .parsingError(let message):
-            return "Ayrıştırma Hatası: \(message)"
+            return "Parsing Error: \(message)"
         }
     }
 } 

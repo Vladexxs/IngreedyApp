@@ -132,8 +132,6 @@ class GeminiAIService: ObservableObject {
         return AIResponse(
             message: geminiText.isEmpty ? "Sorry, I couldn't generate a response. Please try again! 😊" : geminiText,
             suggestions: [], // No automatic suggestions
-            recipes: [], // No automatic recipe parsing
-            nutritionInfo: nil,
             hasProFeatures: GeminiConfiguration.hasProFeatures
         )
     }
