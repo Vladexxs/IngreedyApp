@@ -15,11 +15,20 @@ struct SplashLoadingView: View {
     
     // MARK: - Tips
     private let appTips = [
-        "🍽️ Discover amazing recipes from around the world",
-        "📱 Save your favorite dishes for quick access",
-        "🔍 Search ingredients to find perfect recipes",
-        "👨‍🍳 Step-by-step cooking instructions await you",
-        "⭐ Rate and review recipes to help others"
+        "🥩 Add your ingredients and get perfect recipe matches instantly",
+        "🍽️ Browse recipes by categories: Breakfast, Lunch, Dinner, Snacks & Desserts",
+        "⭐ Save your favorite recipes to your personal collection",
+        "🧠 Chat with ChefMate AI for cooking tips and ingredient substitutions",
+        "🤖 Ask ChefMate about nutritional info, cooking techniques, and meal planning",
+        "💬 ChefMate can suggest recipes based on your dietary preferences",
+        "🍳 Get personalized cooking advice from your AI kitchen companion",
+        "📊 See partial matches when you're missing a few ingredients",
+        "🥄 Get organized ingredient categories: Meat, Vegetables, Dairy & more",
+        "👨‍🍳 View detailed cooking instructions and ingredient lists",
+        "🔍 Search through hundreds of delicious recipes",
+        "📱 Edit your profile and manage your cooking preferences",
+        "✨ Discover featured recipes curated just for you",
+        "🌟 ChefMate learns from your preferences to give better suggestions"
     ]
     
     // MARK: - Body

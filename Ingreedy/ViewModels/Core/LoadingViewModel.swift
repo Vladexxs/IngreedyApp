@@ -18,11 +18,11 @@ class LoadingViewModel: ObservableObject {
     init() {
         // AUTH FIX: Authenticated user için hızlı loading
         if Auth.auth().currentUser != nil {
-            // Authenticated user - fast loading (1-2 saniye)
-            self.loadingDuration = Double.random(in: 1.0...2.0)
-        } else {
-            // New user - normal loading (3-4 saniye)
+            // Authenticated user - medium loading (3-4 saniye)
             self.loadingDuration = Double.random(in: 3.0...4.0)
+        } else {
+            // New user - longer loading (5-7 saniye)
+            self.loadingDuration = Double.random(in: 5.0...7.0)
         }
     }
     

@@ -10,13 +10,6 @@ struct ProfileFavoritesGridCard: View {
                     .font(.title3.bold())
                     .foregroundColor(AppColors.primary)
                 Spacer()
-                Button(action: {
-                    // Tüm favorileri gör aksiyonu
-                }) {
-                    Text("See All")
-                        .font(.subheadline)
-                        .foregroundColor(AppColors.accent)
-                }
             }
             .padding(.horizontal)
             .padding(.top, 24)

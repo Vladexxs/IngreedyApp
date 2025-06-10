@@ -58,9 +58,6 @@ struct HomeView: View {
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(AppColors.text)
                             Spacer()
-                            Button("See All") {}
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(AppColors.accent)
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 8)
@@ -91,9 +88,6 @@ struct HomeView: View {
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(AppColors.text)
                             Spacer()
-                            Button("See All") {}
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(AppColors.accent)
                         }
                         .padding(.horizontal, 24)
                         .padding(.bottom, 8)
