@@ -37,45 +37,4 @@ struct ReceivedSharedRecipe: Identifiable, Codable {
     let timestamp: Date
 }
 
-// MARK: - Extensions
-extension SentSharedRecipe {
-    /// Convert to dictionary for Firebase
-    func toDictionary() -> [String: Any] {
-        var dict: [String: Any] = [
-            "toUserId": toUserId,
-            "recipeId": recipeId,
-            "timestamp": timestamp
-        ]
-        
-        if let toUserName = toUserName {
-            dict["toUserName"] = toUserName
-        }
-        
-        if let reaction = reaction {
-            dict["reaction"] = reaction.rawValue
-        }
-        
-        return dict
-    }
-}
-
-extension ReceivedSharedRecipe {
-    /// Convert to dictionary for Firebase
-    func toDictionary() -> [String: Any] {
-        var dict: [String: Any] = [
-            "fromUserId": fromUserId,
-            "recipeId": recipeId,
-            "timestamp": timestamp
-        ]
-        
-        if let fromUserName = fromUserName {
-            dict["fromUserName"] = fromUserName
-        }
-        
-        if let reaction = reaction {
-            dict["reaction"] = reaction.rawValue
-        }
-        
-        return dict
-    }
-} 
+ 

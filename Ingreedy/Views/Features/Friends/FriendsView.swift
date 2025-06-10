@@ -293,9 +293,15 @@ struct FriendCard: View {
                         .foregroundColor(.green)
                 }
                 
-                Text(friend.email)
-                    .font(.subheadline)
-                    .foregroundColor(AppColors.secondary)
+                if let username = friend.username, !username.isEmpty {
+                    Text("@\(username)")
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondary)
+                } else {
+                    Text(friend.email)
+                        .font(.subheadline)
+                        .foregroundColor(AppColors.secondary)
+                }
             }
             
             Spacer()

@@ -54,30 +54,5 @@ extension FriendRequest {
         self.timestamp = timestamp
     }
     
-    /// Convert to dictionary for Firebase
-    func toDictionary() -> [String: Any] {
-        var dict: [String: Any] = [
-            "fromUserId": fromUserId,
-            "toUserId": toUserId,
-            "fromUserName": fromUserName,
-            "fromUserUsername": fromUserUsername,
-            "toUserName": toUserName,
-            "status": status.rawValue,
-            "timestamp": Timestamp(date: timestamp)
-        ]
-        
-        if let toUserUsername = toUserUsername {
-            dict["toUserUsername"] = toUserUsername
-        }
-        
-        if let fromUserProfileImageUrl = fromUserProfileImageUrl {
-            dict["fromUserProfileImageUrl"] = fromUserProfileImageUrl
-        }
-        
-        if let toUserProfileImageUrl = toUserProfileImageUrl {
-            dict["toUserProfileImageUrl"] = toUserProfileImageUrl
-        }
-        
-        return dict
-    }
+
 } 

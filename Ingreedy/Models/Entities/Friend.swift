@@ -19,12 +19,4 @@ struct Friend: Codable, Identifiable, Equatable {
         self.username = username
         self.profileImageUrl = profileImageUrl
     }
-    
-    // MARK: - Equatable
-    static func == (lhs: Friend, rhs: Friend) -> Bool {
-        return lhs.id == rhs.id &&
-               lhs.fullName == rhs.fullName &&
-               lhs.username == rhs.username &&
-               lhs.profileImageUrl == rhs.profileImageUrl
-    }
 } 

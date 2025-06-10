@@ -95,8 +95,7 @@ class GeminiAIService: ObservableObject {
                 temperature: GeminiConfiguration.Model.temperature,
                 maxOutputTokens: GeminiConfiguration.Model.maxTokens,
                 candidateCount: 1
-            ),
-            tools: nil
+            )
         )
         
         var request = URLRequest(url: url)
@@ -130,9 +129,7 @@ class GeminiAIService: ObservableObject {
     private func parseAIResponse(_ geminiText: String, originalMessage: String) -> AIResponse {
         // Simple response - just return the AI's natural response
         return AIResponse(
-            message: geminiText.isEmpty ? "Sorry, I couldn't generate a response. Please try again! 😊" : geminiText,
-            suggestions: [], // No automatic suggestions
-            hasProFeatures: GeminiConfiguration.hasProFeatures
+            message: geminiText.isEmpty ? "Sorry, I couldn't generate a response. Please try again! 😊" : geminiText
         )
     }
 

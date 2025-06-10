@@ -150,11 +150,5 @@ class SharedRecipeService: SharedRecipeServiceProtocol {
         }
     }
     
-    // Convenience method for string-based reaction (backward compatibility)
-    func reactToRecipe(receivedRecipeId: String, reaction: String) async throws {
-        guard let reactionType = ReactionType(rawValue: reaction) else {
-            throw NSError(domain: "SharedRecipeService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid reaction type: \(reaction)"])
-        }
-        try await reactToRecipe(receivedRecipeId: receivedRecipeId, reaction: reactionType)
-    }
+
 } 

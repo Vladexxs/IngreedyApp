@@ -9,8 +9,7 @@ struct IngredientSuggestionView: View {
     @FocusState private var isTextFieldFocused: Bool // KEYBOARD FIX: Focus state
     
     var body: some View {
-        GeometryReader { geometry in
-            NavigationView {
+        NavigationView {
                 ZStack {
                     AppColors.background.ignoresSafeArea()
                     
@@ -76,8 +75,6 @@ struct IngredientSuggestionView: View {
                 }
             }
             .navigationViewStyle(StackNavigationViewStyle())
-
-        }
     }
     
     // MARK: - Hero Section

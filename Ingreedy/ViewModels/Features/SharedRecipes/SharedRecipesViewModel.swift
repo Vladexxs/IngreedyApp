@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import FirebaseFirestore
 import FirebaseAuth
 
@@ -13,26 +12,14 @@ class SharedRecipesViewModel: ObservableObject {
     @Published var recipeCache: [Int: Recipe] = [:] // recipeId -> Recipe
     
     private let service = SharedRecipeService()
-    private let customSession: URLSession
     private let db = Firestore.firestore()
     var router: Router? // Router referansı (public)
     
     init(router: Router? = nil) {
         self.router = router
-        let config = URLSessionConfiguration.default
-        config.httpShouldUsePipelining = false
-        config.httpMaximumConnectionsPerHost = 1
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 300
-        config.waitsForConnectivity = true
-        self.customSession = URLSession(configuration: config)
     }
     
-    // MARK: - Helper Methods
-    private func stringToReactionType(_ reactionString: String?) -> ReactionType? {
-        guard let reactionString = reactionString else { return nil }
-        return ReactionType(rawValue: reactionString)
-    }
+
     
     // MARK: - Public Methods
     // Bana gönderilen tarifleri çek (tek seferlik fetch)
@@ -62,7 +49,7 @@ class SharedRecipesViewModel: ObservableObject {
                     fromUserId: fromUserId,
                     fromUserName: nil,
                     recipeId: recipeId,
-                    reaction: stringToReactionType(reactionString),
+                    reaction: ReactionType(rawValue: reactionString ?? ""),
                     timestamp: timestamp
                 )
             }
@@ -105,14 +92,7 @@ class SharedRecipesViewModel: ObservableObject {
         }
     }
     
-    // Gelen tarife string tepkisi ver (backward compatibility)
-    func reactToRecipe(receivedRecipeId: String, reaction: String) async {
-        guard let reactionType = ReactionType(rawValue: reaction) else {
-            errorMessage = "Geçersiz tepki türü: \(reaction)"
-            return
-        }
-        await reactToRecipe(receivedRecipeId: receivedRecipeId, reaction: reactionType)
-    }
+
     
     // Tarif gönderme (isteğe bağlı, UI'de kullanmak istersem)
     func sendRecipe(toUserId: String, recipeId: Int) async {

@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import FirebaseFirestore
 
 // MARK: - HomeViewModel
@@ -39,22 +38,6 @@ class HomeViewModel: BaseViewModel {
     }
     
     // MARK: - Recipe Fetching Methods
-    func fetchFeaturedRecipes() {
-        performNetwork({ completion in
-            self.recipeService.fetchRecipes(completion: completion)
-        }, onSuccess: { [weak self] recipes in
-            self?.featuredRecipes = Array(recipes.shuffled().prefix(2))
-        })
-    }
-    
-    func fetchPopularRecipes() {
-        performNetwork({ completion in
-            self.recipeService.fetchPopularRecipes(limit: 10, completion: completion)
-        }, onSuccess: { [weak self] recipes in
-            self?.popularRecipes = recipes
-        })
-    }
-    
     func fetchFeaturedRecipesByMealType() {
         performNetwork({ completion in
             self.recipeService.fetchRecipesByMealType(self.selectedMealType, completion: completion)
@@ -114,10 +97,6 @@ class HomeViewModel: BaseViewModel {
     
     var userName: String {
         return currentUser?.fullName ?? "User"
-    }
-    
-    var userProfileImageUrl: String? {
-        return currentUser?.profileImageUrl
     }
     
     // MARK: - Favorites Management

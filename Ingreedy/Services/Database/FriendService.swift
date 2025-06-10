@@ -88,18 +88,33 @@ class FriendService: FriendServiceProtocol {
             throw NSError(domain: "FriendService", code: 403, userInfo: [NSLocalizedDescriptionKey: "Invalid friend request"])
         }
         
+        // Her iki kullanıcının mevcut durumunu kontrol et
+        let currentUserRef = db.collection("users").document(currentUserId)
+        let fromUserRef = db.collection("users").document(fromUserId)
+        
+        let currentUserDoc = try await currentUserRef.getDocument()
+        let fromUserDoc = try await fromUserRef.getDocument()
+        
+        var currentUserFriends = currentUserDoc.data()?["friends"] as? [String] ?? []
+        var fromUserFriends = fromUserDoc.data()?["friends"] as? [String] ?? []
+        
+        // Arkadaş listelerine ekle (duplicate kontrolü ile)
+        if !currentUserFriends.contains(fromUserId) {
+            currentUserFriends.append(fromUserId)
+        }
+        if !fromUserFriends.contains(currentUserId) {
+            fromUserFriends.append(currentUserId)
+        }
+        
         // Batch işlemi başlat
         let batch = db.batch()
         
         // İsteği kabul edildi olarak güncelle
         batch.updateData(["status": FriendRequest.FriendRequestStatus.accepted.rawValue], forDocument: requestRef)
         
-        // Her iki kullanıcının arkadaş listesine ekle
-        let currentUserRef = db.collection("users").document(currentUserId)
-        let fromUserRef = db.collection("users").document(fromUserId)
-        
-        batch.updateData(["friends": FieldValue.arrayUnion([fromUserId])], forDocument: currentUserRef)
-        batch.updateData(["friends": FieldValue.arrayUnion([currentUserId])], forDocument: fromUserRef)
+        // Her iki kullanıcının arkadaş listesini güncelle
+        batch.updateData(["friends": currentUserFriends], forDocument: currentUserRef)
+        batch.updateData(["friends": fromUserFriends], forDocument: fromUserRef)
         
         try await batch.commit()
     }
@@ -314,6 +329,68 @@ class FriendService: FriendServiceProtocol {
                 }
                 
                 completion(requests)
+            }
+    }
+    
+    /// Listen to friends list with real-time updates
+    func listenToFriends(completion: @escaping ([User]) -> Void) -> ListenerRegistration? {
+        guard let currentUserId = Auth.auth().currentUser?.uid else { 
+            return nil
+        }
+        
+        return db.collection("users").document(currentUserId)
+            .addSnapshotListener { [weak self] snapshot, error in
+                if let error = error {
+                    completion([])
+                    return
+                }
+                
+                guard let document = snapshot,
+                      document.exists,
+                      let data = document.data(),
+                      let friendIds = data["friends"] as? [String],
+                      !friendIds.isEmpty else {
+                    completion([])
+                    return
+                }
+                
+                // Fetch friend details in background
+                Task {
+                    do {
+                        var friends: [User] = []
+                        
+                        // Firestore 'in' query limiti 30, bu yüzden chunklara böl
+                        let chunkSize = 30
+                        for chunk in friendIds.chunked(into: chunkSize) {
+                            let query = self?.db.collection("users").whereField(FieldPath.documentID(), in: chunk)
+                            let snapshot = try await query?.getDocuments()
+                            
+                            let chunkFriends = snapshot?.documents.compactMap { doc -> User? in
+                                let data = doc.data()
+                                return User(
+                                    id: doc.documentID,
+                                    email: data["email"] as? String ?? "",
+                                    fullName: data["fullName"] as? String ?? "",
+                                    username: data["username"] as? String,
+                                    favorites: data["favorites"] as? [Int] ?? [],
+                                    friends: nil,
+                                    profileImageUrl: data["profileImageUrl"] as? String,
+                                    createdAt: (data["createdAt"] as? Timestamp)?.dateValue()
+                                )
+                            } ?? []
+                            
+                            friends.append(contentsOf: chunkFriends)
+                        }
+                        
+                        DispatchQueue.main.async {
+                            completion(friends)
+                        }
+                    } catch {
+                        DispatchQueue.main.async {
+                            completion([])
+                        }
+                    }
+                }
             }
     }
 } 

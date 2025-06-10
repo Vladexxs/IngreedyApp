@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import FirebaseAuth
 import FirebaseFirestore
 
@@ -15,11 +14,11 @@ class FriendViewModel: ObservableObject {
     @Published var friendUsername: String = ""
     
     private let friendService = FriendService()
-    private var cancellables = Set<AnyCancellable>()
     
     // Real-time listeners
     private var incomingRequestsListener: ListenerRegistration?
     private var outgoingRequestsListener: ListenerRegistration?
+    private var friendsListener: ListenerRegistration?
     
     // PERFORMANCE: Cache mechanism
     private var lastFriendsUpdate: Date?
@@ -35,6 +34,7 @@ class FriendViewModel: ObservableObject {
         // Clean up listeners
         incomingRequestsListener?.remove()
         outgoingRequestsListener?.remove()
+        friendsListener?.remove()
     }
     
     // MARK: - Setup Real-time Listeners
@@ -52,12 +52,22 @@ class FriendViewModel: ObservableObject {
                 self?.outgoingRequests = requests
             }
         }
+        
+        // Listen to friends list
+        friendsListener = friendService.listenToFriends { [weak self] friends in
+            DispatchQueue.main.async {
+                self?.friends = friends
+                self?.lastFriendsUpdate = Date()
+                self?.hasInitialDataLoaded = true
+            }
+        }
     }
     
     // MARK: - Restart Listeners (when user changes)
     func restartListeners() {
         incomingRequestsListener?.remove()
         outgoingRequestsListener?.remove()
+        friendsListener?.remove()
         setupRealTimeListeners()
     }
     
@@ -138,9 +148,9 @@ class FriendViewModel: ObservableObject {
             do {
                 try await friendService.acceptFriendRequest(request.id)
                 
-                // Real-time listener will automatically remove from pending requests
-                // Reload friends list to show the new friend
-                loadFriends()
+                // Real-time listeners will automatically update UI:
+                // - Remove from pending requests
+                // - Add to friends list
                 
                 successMessage = "Friend request accepted!"
             } catch {
@@ -169,8 +179,9 @@ class FriendViewModel: ObservableObject {
             do {
                 try await friendService.removeFriend(friend.id)
                 
-                // Remove from friends list
+                // Remove from friends list locally and force refresh
                 friends.removeAll { $0.id == friend.id }
+                refreshData()
                 
                 successMessage = "Friend removed"
             } catch {
@@ -210,77 +221,5 @@ class FriendViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Load Test Data (for testing UI)
-    func loadTestData() {
-        // Test incoming requests
-        let testIncomingRequest1 = FriendRequest(
-            id: "test1",
-            fromUserId: "user1",
-            toUserId: "currentUser",
-            fromUserName: "Ali Yılmaz",
-            fromUserUsername: "aliyilmaz",
-            toUserName: "Current User",
-            toUserUsername: "currentuser",
-            fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
-            status: .pending,
-            timestamp: Date()
-        )
-        
-        let testIncomingRequest2 = FriendRequest(
-            id: "test2",
-            fromUserId: "user2",
-            toUserId: "currentUser",
-            fromUserName: "Ayşe Demir",
-            fromUserUsername: "aysedemir",
-            toUserName: "Current User",
-            toUserUsername: "currentuser",
-            fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
-            status: .pending,
-            timestamp: Date().addingTimeInterval(-3600) // 1 hour ago
-        )
-        
-        // Test outgoing requests
-        let testOutgoingRequest1 = FriendRequest(
-            id: "test3",
-            fromUserId: "currentUser",
-            toUserId: "user3",
-            fromUserName: "Current User",
-            fromUserUsername: "currentuser",
-            toUserName: "Mehmet Özkan",
-            toUserUsername: "mehmetozkan",
-            fromUserProfileImageUrl: nil,
-            toUserProfileImageUrl: nil,
-            status: .pending,
-            timestamp: Date().addingTimeInterval(-1800) // 30 minutes ago
-        )
-        
-        // Test friends
-        let testFriend1 = User(
-            id: "friend1",
-            email: "zeynep@example.com",
-            fullName: "Zeynep Kaya",
-            username: "zeynepkaya",
-            favorites: [],
-            friends: nil,
-            profileImageUrl: nil,
-            createdAt: Date()
-        )
-        
-        let testFriend2 = User(
-            id: "friend2",
-            email: "emre@example.com",
-            fullName: "Emre Şahin",
-            username: "emresahin",
-            favorites: [],
-            friends: nil,
-            profileImageUrl: nil,
-            createdAt: Date()
-        )
-        
-        self.incomingRequests = [testIncomingRequest1, testIncomingRequest2]
-        self.outgoingRequests = [testOutgoingRequest1]
-        self.friends = [testFriend1, testFriend2]
-    }
+
 }

@@ -102,14 +102,8 @@ struct AIChatView: View {
             ScrollView {
                 LazyVStack(spacing: 16) {
                     ForEach(viewModel.messages) { message in
-                        MessageBubble(message: message) { suggestion in
-                            // Set the suggestion as current message and send
-                            viewModel.currentMessage = suggestion
-                            Task {
-                                await viewModel.sendMessage()
-                            }
-                        }
-                        .id(message.id)
+                        MessageBubble(message: message)
+                            .id(message.id)
                     }
                     
                     // Typing Indicator
@@ -211,7 +205,6 @@ struct AIChatView: View {
 // MARK: - Message Bubble
 struct MessageBubble: View {
     let message: ChatMessage
-    let onSuggestionTap: (String) -> Void
     
     var body: some View {
         HStack {
@@ -282,10 +275,7 @@ struct MessageBubble: View {
             
             // Note: Recipe cards removed as we simplified to pure chat
             
-            // Suggestions
-            if !message.suggestions.isEmpty {
-                SuggestionsView(suggestions: message.suggestions, onTap: onSuggestionTap)
-            }
+
         }
     }
 }
@@ -294,38 +284,7 @@ struct MessageBubble: View {
 // NutritionCard, RecipeCardsView, and AIRecipeCard have been removed
 // as we simplified to pure chat interface
 
-// MARK: - Suggestions View
-struct SuggestionsView: View {
-    let suggestions: [String]
-    let onTap: (String) -> Void
-    
-    var body: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 1), spacing: 8) {
-            ForEach(suggestions, id: \.self) { suggestion in
-                Button(action: { onTap(suggestion) }) {
-                    HStack {
-                        Text(suggestion)
-                            .font(.subheadline)
-                            .foregroundColor(AppColors.accent)
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                            .font(.caption)
-                            .foregroundColor(AppColors.accent)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(AppColors.accent.opacity(0.1))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(AppColors.accent.opacity(0.3), lineWidth: 1)
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-        }
-    }
-}
+
 
 // MARK: - Typing Indicator
 struct TypingIndicator: View {

@@ -27,8 +27,7 @@ class AIChatViewModel: BaseViewModel {
         // Add user message
         let userChatMessage = ChatMessage(
             content: userMessage,
-            isUser: true,
-            hasProFeatures: false
+            isUser: true
         )
         messages.append(userChatMessage)
         
@@ -55,9 +54,7 @@ class AIChatViewModel: BaseViewModel {
         
         let welcomeMessage = ChatMessage(
             content: welcomeContent,
-            isUser: false,
-            suggestions: [],
-            hasProFeatures: false
+            isUser: false
         )
         
         messages.append(welcomeMessage)
@@ -80,9 +77,7 @@ class AIChatViewModel: BaseViewModel {
             // Create AI message
             let aiMessage = ChatMessage(
                 content: response.message,
-                isUser: false,
-                suggestions: response.suggestions,
-                hasProFeatures: response.hasProFeatures
+                isUser: false
             )
             
             // Add message
@@ -98,9 +93,7 @@ class AIChatViewModel: BaseViewModel {
     override func handleError(_ error: Error) {
         let errorMessage = ChatMessage(
             content: "😔 Sorry, I encountered an issue:\n\n\(error.localizedDescription)\n\nPlease try again.",
-            isUser: false,
-            suggestions: [],
-            hasProFeatures: false
+            isUser: false
         )
         
         messages.append(errorMessage)

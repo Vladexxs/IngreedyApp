@@ -3,8 +3,6 @@ import Foundation
 // MARK: - AI Response Models
 struct AIResponse {
     let message: String
-    let suggestions: [String]
-    let hasProFeatures: Bool
 }
 
 // MARK: - Chat Models
@@ -13,23 +11,17 @@ struct ChatMessage: Identifiable {
     let content: String
     let isUser: Bool
     let timestamp: Date
-    let suggestions: [String]
-    let hasProFeatures: Bool
     
     init(
         id: UUID = UUID(),
         content: String,
         isUser: Bool,
-        timestamp: Date = Date(),
-        suggestions: [String] = [],
-        hasProFeatures: Bool = false
+        timestamp: Date = Date()
     ) {
         self.id = id
         self.content = content
         self.isUser = isUser
         self.timestamp = timestamp
-        self.suggestions = suggestions
-        self.hasProFeatures = hasProFeatures
     }
     
     var formattedTime: String {
@@ -43,7 +35,6 @@ struct ChatMessage: Identifiable {
 struct GeminiRequest: Codable {
     let contents: [GeminiContent]
     let generationConfig: GeminiGenerationConfig
-    let tools: [GeminiTool]?
 }
 
 struct GeminiContent: Codable {
@@ -68,18 +59,12 @@ struct GeminiCandidate: Codable {
     let content: GeminiContent
 }
 
-// MARK: - Minimal Tool Support (for API compatibility)
-struct GeminiTool: Codable {
-    // Empty struct for API compatibility - tools are disabled
-}
-
 // MARK: - Error Models
 enum AIError: LocalizedError {
     case configurationError(String)
     case networkError(String)
     case apiError(String)
     case noResponse(String)
-    case parsingError(String)
     
     var errorDescription: String? {
         switch self {
@@ -91,8 +76,6 @@ enum AIError: LocalizedError {
             return "API Error: \(message)"
         case .noResponse(let message):
             return "No Response: \(message)"
-        case .parsingError(let message):
-            return "Parsing Error: \(message)"
         }
     }
 } 

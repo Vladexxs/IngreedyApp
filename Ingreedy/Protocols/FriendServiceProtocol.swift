@@ -15,4 +15,5 @@ protocol FriendServiceProtocol {
     // Real-time listeners
     func listenToIncomingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration?
     func listenToOutgoingFriendRequests(completion: @escaping ([FriendRequest]) -> Void) -> ListenerRegistration?
+    func listenToFriends(completion: @escaping ([User]) -> Void) -> ListenerRegistration?
 } 

@@ -367,7 +367,9 @@ struct SharedRecipesView: View {
         }
         
         // Send reaction to firebase
-        await viewModel.reactToRecipe(receivedRecipeId: recipe.id, reaction: emoji)
+        if let reactionType = ReactionType(rawValue: emoji) {
+            await viewModel.reactToRecipe(receivedRecipeId: recipe.id, reaction: reactionType)
+        }
         
         // Clean up after animation and exit blur
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
