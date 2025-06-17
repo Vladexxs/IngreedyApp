@@ -14,20 +14,14 @@ class FirebaseAuthenticationService: AuthenticationServiceProtocol {
     private let cacheExpirationInterval: TimeInterval = 300 // 5 dakika
     
     var currentUser: User? {
-        // Cache'i kontrol et ve gerekirse temizle
-        if let timestamp = cacheTimestamp, Date().timeIntervalSince(timestamp) > cacheExpirationInterval {
-            cachedUser = nil
-            cacheTimestamp = nil
-        }
-        
-        // Cache'den döndürme yerine her zaman fresh data al
+        // Her çağrıda fresh data al, cache'e güvenme
         guard let firebaseUser = auth.currentUser else { 
             cachedUser = nil
             cacheTimestamp = nil
             return nil 
         }
         
-        // Her zaman Firestore'dan fresh data al
+        // Basit user objesini döndür, detaylar Firestore'dan alınacak
         return createUserFromFirebaseUser(firebaseUser)
     }
     

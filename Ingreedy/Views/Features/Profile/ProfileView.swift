@@ -55,10 +55,8 @@ struct ProfileView: View {
                 // Simple user change handling without aggressive preloading
             }
             .onAppear {
-                if let user = viewModel.user {
-                    viewModel.fetchUser(withId: user.id)
-                }
-                viewModel.fetchFavoriteRecipes()
+                // Her profil sayfası açıldığında fresh data çek
+                viewModel.fetchCurrentUser()
             }
             .sheet(isPresented: $showEditProfile, onDismiss: {
                 // Reset selectedImage when edit profile is dismissed
