@@ -1,6 +1,3 @@
-# Exclude specific markdown files
-rules.md
-
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
