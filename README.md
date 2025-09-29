@@ -144,6 +144,4 @@ Select a simulator or device, then Build & Run.
 
 ---
 
-## License
 
-MIT (or add a license file if not present)
