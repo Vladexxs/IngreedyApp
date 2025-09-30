@@ -64,32 +64,25 @@ Ingreedy is an iOS app that helps home cooks quickly figure out what to cook, di
 
 ---
 
-
 ## 📸 Screenshots
 
-### Login
-![Login Screen](Screenshots/login.png)
+<p float="left">
+  <img src="Screenshots/login.png" width="250"/>
+  <img src="Screenshots/home.png" width="250"/>
+  <img src="Screenshots/recipe.png" width="250"/>
+</p>
 
-### Home
-![Home Screen](Screenshots/home.png)
+<p float="left">
+  <img src="Screenshots/GetRecipes.png" width="250"/>
+  <img src="Screenshots/ai-assistant.png" width="250"/>
+  <img src="Screenshots/shared.png" width="250"/>
+</p>
 
-### Profile
-![Profile Screen](Screenshots/profile.png)
+<p float="left">
+  <img src="Screenshots/acc.png" width="250"/>
+   <img src="Screenshots/profile.png" width="250"/>
+</p>
 
-### Get Recipes
-![Get Recipes](Screenshots/GetRecipes.png)
-
-### Recipe Detail
-![Recipe Screen](Screenshots/recipe.png)
-
-### Shared Recipes
-![Shared Screen](Screenshots/shared.png)
-
-### AI Assistant
-![AI Assistant](Screenshots/ai-assistant.png)
-
-### Account
-![Account Screen](Screenshots/acc.png)
 
 
 ---
